@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System;
+using System.Runtime.InteropServices;
 
 namespace WiimoteApi { 
 public class WiimoteManager
@@ -32,6 +33,13 @@ public class WiimoteManager
         return hidapi_wiimote != IntPtr.Zero;
     }
 
+    public static void Cleanup()
+    {
+        if (hidapi_wiimote != IntPtr.Zero)
+            HIDapi.hid_close(hidapi_wiimote);
+        hidapi_wiimote = IntPtr.Zero;
+    }
+
     public static bool HasWiimote()
     {
         return !(hidapi_wiimote == null || hidapi_wiimote == IntPtr.Zero);
@@ -41,9 +49,11 @@ public class WiimoteManager
     {
         if (hidapi_wiimote == IntPtr.Zero) return -1;
 
-        Debug.Log("Sent: " + BitConverter.ToString(data));
+        byte[] final = new byte[22];
+        for (int x = 0; x < data.Length; x++)
+            final[x] = data[x];
 
-        return HIDapi.hid_write(hidapi_wiimote, data, new UIntPtr(Convert.ToUInt32(data.Length)));
+        return HIDapi.hid_write(hidapi_wiimote, final, new UIntPtr(Convert.ToUInt32(22)));
     }
 
     public static int RecieveRaw(byte[] buf)
@@ -51,7 +61,9 @@ public class WiimoteManager
         if (hidapi_wiimote == IntPtr.Zero) return -1;
 
         HIDapi.hid_set_nonblocking(hidapi_wiimote, 1);
-        return HIDapi.hid_read(hidapi_wiimote, buf, new UIntPtr(Convert.ToUInt32(buf.Length)));
+        int res = HIDapi.hid_read(hidapi_wiimote, buf, new UIntPtr(Convert.ToUInt32(buf.Length)));
+
+        return res;
     }
 
     // ------------- WIIMOTE SPECIFIC UTILITIES ------------- //
@@ -107,7 +119,12 @@ public class WiimoteManager
         if (RumbleOn)
             final[1] |= 0x01;
 
-        return SendRaw(final);
+        int res = SendRaw(final);
+
+        if (res < 0) Debug.LogError("HidAPI reports error on write: " + Marshal.PtrToStringUni(HIDapi.hid_error(hidapi_wiimote)));
+        else Debug.Log("Sent " + res + "b: [" + final[0].ToString("X").PadLeft(2, '0') + "] " + BitConverter.ToString(data));
+
+        return res;
     }
 
     public static int SendPlayerLED(bool led1, bool led2, bool led3, bool led4)
@@ -198,11 +215,12 @@ public class WiimoteManager
         int status = RecieveRaw(buf);
         if (status <= 0) return; // Either there is some sort of error or we haven't recieved anything
 
-        byte[] data = new byte[status - 1];
+        int typesize = GetInputDataTypeSize((InputDataType)buf[0]);
+        byte[] data = new byte[typesize];
         for (int x = 0; x < data.Length; x++)
             data[x] = buf[x + 1];
 
-        Debug.Log("Recieved: " + BitConverter.ToString(buf));
+        Debug.Log("Recieved: [" + buf[0].ToString("X").PadLeft(2, '0') + "] " + BitConverter.ToString(data));
 
         // Variable names used throughout the switch/case block
         byte[] buttons;
@@ -324,6 +342,42 @@ public class WiimoteManager
                 // TODO
                 break;
         }
+    }
+
+    public static int GetInputDataTypeSize(InputDataType type)
+    {
+        switch (type)
+        {
+            case InputDataType.STATUS_INFO:
+                return 6;
+            case InputDataType.READ_MEMORY_REGISTERS:
+                return 21;
+            case InputDataType.ACKNOWLEDGE_OUTPUT_REPORT:
+                return 4;
+            case InputDataType.REPORT_BUTTONS:
+                return 2;
+            case InputDataType.REPORT_BUTTONS_ACCEL:
+                return 5;
+            case InputDataType.REPORT_BUTTONS_EXT8:
+                return 10;
+            case InputDataType.REPORT_BUTTONS_ACCEL_IR12:
+                return 17;
+            case InputDataType.REPORT_BUTTONS_EXT19:
+                return 21;
+            case InputDataType.REPORT_BUTTONS_ACCEL_EXT16:
+                return 21;
+            case InputDataType.REPORT_BUTTONS_IR10_EXT9:
+                return 21;
+            case InputDataType.REPORT_BUTTONS_ACCEL_IR10_EXT6:
+                return 21;
+            case InputDataType.REPORT_EXT21:
+                return 21;
+            case InputDataType.REPORT_INTERLEAVED:
+                return 21;
+            case InputDataType.REPORT_INTERLEAVED_ALT:
+                return 21;
+        }
+        return 0;
     }
 
     public static void InterpretButtonData(byte[] data)

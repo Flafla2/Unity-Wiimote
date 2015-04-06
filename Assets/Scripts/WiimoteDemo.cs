@@ -35,11 +35,27 @@ public class WiimoteDemo : MonoBehaviour {
             bool found = WiimoteManager.FindWiimote(false);
             if (found)
             {
-                int gucci = WiimoteManager.SendPlayerLED(true, false, true, false);
-                if (gucci < 0) Debug.Log("Shit.");
-                WiimoteManager.SetupIRCamera();
+                //WiimoteManager.SendRaw(new byte[] { (byte)WiimoteManager.InputDataType.REPORT_BUTTONS_ACCEL_IR12 });
+                //int gucci = WiimoteManager.SendPlayerLED(true, false, false, false);
+                //WiimoteManager.SetupIRCamera();
+                //WiimoteManager.SendDataReportMode(WiimoteManager.InputDataType.REPORT_BUTTONS_ACCEL_IR12);
             }
         }
+
+        if (GUILayout.Button("Cleanup"))
+            WiimoteManager.Cleanup();
+
+        if(GUILayout.Button("LED Test"))
+            WiimoteManager.SendPlayerLED(true, false, false, false);
+
+        if(GUILayout.Button("Set Report: Button/Accel/IR12"))
+            WiimoteManager.SendDataReportMode(WiimoteManager.InputDataType.REPORT_BUTTONS_ACCEL);
+
+        if (GUILayout.Button("Send Status Report"))
+            WiimoteManager.SendStatusInfoRequest();
+
+        //if(GUILayout.Button("Read"))
+         //   WiimoteManager.ReadWiimoteData();
 
     }
 }

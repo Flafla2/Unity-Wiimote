@@ -13,7 +13,7 @@ public class HIDapi {
     public static extern int hid_exit();
 
     [DllImport("hidapi")]
-    public static extern string hid_error(IntPtr device);
+    public static extern IntPtr hid_error(IntPtr device);
 
     [DllImport("hidapi")]
     public static extern IntPtr hid_enumerate(ushort vendor_id, ushort product_id);
