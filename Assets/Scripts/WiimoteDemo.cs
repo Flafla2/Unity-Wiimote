@@ -1,10 +1,12 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using WiimoteApi;
 
 public class WiimoteDemo : MonoBehaviour {
 
     public WiimoteModel model;
+    public RectTransform[] ir_dots;
 
     private float last_update_time = 0;
     private Wiimote wiimote;
@@ -39,6 +41,22 @@ public class WiimoteDemo : MonoBehaviour {
         model.plus.enabled = wiimote.plus;
         model.minus.enabled = wiimote.minus;
         model.home.enabled = wiimote.home;
+
+        if (ir_dots.Length < 4) return;
+
+        for (int i = 0; i < 4; i++)
+        {
+            float x = (float)wiimote.ir[i, 0] / 1023f;
+            float y = (float)wiimote.ir[i, 1] / 767f;
+            if (x == -1 || y == -1) {
+                ir_dots[i].anchorMin = new Vector2(0, 0);
+                ir_dots[i].anchorMax = new Vector2(0, 0);
+            }
+            // TODO: size
+
+            ir_dots[i].anchorMin = new Vector2(x, y);
+            ir_dots[i].anchorMax = new Vector2(x, y);
+        }
 	}
 
     void OnGUI()
@@ -82,7 +100,7 @@ public class WiimoteDemo : MonoBehaviour {
         float accel_y =  (float)wiimote.accel[2] / 128f;
         float accel_z = -(float)wiimote.accel[1] / 128f;
 
-        Gizmos.color = Color.cyan;
+        Gizmos.color = Color.red;
         Gizmos.DrawLine(model.rot.position, model.rot.position + model.rot.rotation*new Vector3(accel_x,-accel_y,accel_z)*2);
 
         //Gizmos.color = Color.red;

@@ -74,25 +74,25 @@ public class WiimoteManager
         res = SendIRCameraEnable(true);
         if (res < 0) return false;
         // 3. Write 0x08 to register 0xb00030
-        res = SendRegisterWriteRequest(RegisterType.EEPROM, 0xb00030, new byte[] { 0x08 });
+        res = SendRegisterWriteRequest(RegisterType.CONTROL, 0xb00030, new byte[] { 0x08 });
         if (res < 0) return false;
         // 4. Write Sensitivity Block 1 to registers at 0xb00000
         // Wii sensitivity level 3:
         // 02 00 00 71 01 00 aa 00 64
-        res = SendRegisterWriteRequest(RegisterType.EEPROM, 0xb00000, 
+        res = SendRegisterWriteRequest(RegisterType.CONTROL, 0xb00000, 
             new byte[] { 0x02, 0x00, 0x00, 0x71, 0x01, 0x00, 0xaa, 0x00, 0x64 });
         if (res < 0) return false;
         // 5. Write Sensitivity Block 2 to registers at 0xb0001a
         // Wii sensitivity level 3: 
         // 63 03
-        res = SendRegisterWriteRequest(RegisterType.EEPROM, 0xb0001a, new byte[] { 0x63, 0x03 });
+        res = SendRegisterWriteRequest(RegisterType.CONTROL, 0xb0001a, new byte[] { 0x63, 0x03 });
         if (res < 0) return false;
         // 6. Write Mode Number to register 0xb00033
         // Mode #3: 12 byte IR data
-        res = SendRegisterWriteRequest(RegisterType.EEPROM, 0xb00033, new byte[] { 3 });
+        res = SendRegisterWriteRequest(RegisterType.CONTROL, 0xb00033, new byte[] { 3 });
         if (res < 0) return false;
         // 7. Write 0x08 to register 0xb00030 (again)
-        res = SendRegisterWriteRequest(RegisterType.EEPROM, 0xb00030, new byte[] { 0x08 });
+        res = SendRegisterWriteRequest(RegisterType.CONTROL, 0xb00030, new byte[] { 0x08 });
         if (res < 0) return false;
 
         // We are using data report mode 3, so we need to use this data report mode.
@@ -195,14 +195,16 @@ public class WiimoteManager
     public static int SendRegisterWriteRequest(RegisterType type, int offset, byte[] data)
     {
         if (data.Length > 16) return -1;
+        
 
         byte address_select = (byte)type;
-        byte[] offsetArr = IntToBigEndian(offset, 3);
+        byte[] offsetArr = IntToBigEndian(offset,3);
 
-        byte[] total = new byte[4 + data.Length];
+        byte[] total = new byte[21];
         total[0] = address_select;
         for (int x = 0; x < 3; x++) total[x + 1] = offsetArr[x];
-        for (int x = 0; x < data.Length; x++) total[x + 4] = data[x];
+        total[4] = (byte)data.Length;
+        for (int x = 0; x < data.Length; x++) total[x + 5] = data[x];
 
         return SendWithType(OutputDataType.WRITE_MEMORY_REGISTERS, total);
     }
@@ -445,16 +447,16 @@ public class WiimoteManager
     public static byte[] IntToBigEndian(int input, int len)
     {
         byte[] intBytes = BitConverter.GetBytes(input);
+        Array.Resize(ref intBytes, len);
         if (BitConverter.IsLittleEndian)
             Array.Reverse(intBytes);
-
-        Array.Resize(ref intBytes, len);
+        
         return intBytes;
     }
 
     public enum RegisterType
     {
-        EEPROM = 0x04, CONTROL = 0x00
+        EEPROM = 0x00, CONTROL = 0x04
     }
 
     /// <summary>
@@ -527,7 +529,11 @@ public class Wiimote
     // example, if there are less than four dots, or if size data is
     // unavailable).
     // This is only updated if the Wiimote has a report mode with IR
-    // 
+    //
+    //        | Position X | Position Y |  Size  |
+    // Range: |  0 - 1023  |  0 - 767   | 0 - 15 |
+    // Index: |     0      |      1     |   2    |
+    //
     // int[dot index, x (0) / y (1) / size (2)]
     public int[,] ir;
 
