@@ -17,7 +17,7 @@ public class WiimoteManager
     private static bool wiimoteplus;
     public static Wiimote State = new Wiimote();
 
-    private static InputDataType last_report_type;
+    private static InputDataType last_report_type = InputDataType.REPORT_BUTTONS;
     private static bool expecting_status_report = false;
 
     // ------------- RAW HIDAPI INTERFACE ------------- //
@@ -49,11 +49,7 @@ public class WiimoteManager
     {
         if (hidapi_wiimote == IntPtr.Zero) return -1;
 
-        byte[] final = new byte[22];
-        for (int x = 0; x < data.Length; x++)
-            final[x] = data[x];
-
-        return HIDapi.hid_write(hidapi_wiimote, final, new UIntPtr(Convert.ToUInt32(22)));
+        return HIDapi.hid_write(hidapi_wiimote, data, new UIntPtr(Convert.ToUInt32(data.Length)));
     }
 
     public static int RecieveRaw(byte[] buf)
@@ -121,7 +117,7 @@ public class WiimoteManager
 
         int res = SendRaw(final);
 
-        if (res < 0) Debug.LogError("HidAPI reports error on write: " + Marshal.PtrToStringUni(HIDapi.hid_error(hidapi_wiimote)));
+        if (res < 0) Debug.LogError("HidAPI reports error " + res + " on write: " + Marshal.PtrToStringUni(HIDapi.hid_error(hidapi_wiimote)));
         else Debug.Log("Sent " + res + "b: [" + final[0].ToString("X").PadLeft(2, '0') + "] " + BitConverter.ToString(data));
 
         return res;
@@ -141,7 +137,10 @@ public class WiimoteManager
     public static int SendDataReportMode(InputDataType mode)
     {
         if (mode == InputDataType.STATUS_INFO || mode == InputDataType.READ_MEMORY_REGISTERS || mode == InputDataType.ACKNOWLEDGE_OUTPUT_REPORT)
+        {
+            Debug.LogError("Passed " + mode.ToString() + " to SendDataReportMode!");
             return -1;
+        }
 
         last_report_type = mode;
 
@@ -177,6 +176,7 @@ public class WiimoteManager
 
     public static int SendStatusInfoRequest()
     {
+        expecting_status_report = true;
         return SendWithType(OutputDataType.STATUS_INFO_REQUEST, new byte[] { 0x00 });
     }
 
@@ -209,11 +209,11 @@ public class WiimoteManager
     #endregion
 
     #region Read
-    public static void ReadWiimoteData()
+    public static int ReadWiimoteData()
     {
         byte[] buf = new byte[22];
         int status = RecieveRaw(buf);
-        if (status <= 0) return; // Either there is some sort of error or we haven't recieved anything
+        if (status <= 0) return status; // Either there is some sort of error or we haven't recieved anything
 
         int typesize = GetInputDataTypeSize((InputDataType)buf[0]);
         byte[] data = new byte[typesize];
@@ -342,6 +342,7 @@ public class WiimoteManager
                 // TODO
                 break;
         }
+        return status;
     }
 
     public static int GetInputDataTypeSize(InputDataType type)
@@ -404,8 +405,10 @@ public class WiimoteManager
         if (buttons == null || accel == null || buttons.Length != 2 || accel.Length != 3) return;
 
         State.accel[0] = ((int)accel[0] << 2) | ((buttons[0] >> 5) & 0xff);
-        State.accel[1] = ((int)accel[1] << 2) | ((buttons[1] >> 4) & 0x0f);
+        State.accel[1] = ((int)accel[1] << 2) | ((buttons[1] >> 4) & 0xf0);
         State.accel[2] = ((int)accel[2] << 2) | ((buttons[1] >> 5) & 0xf0);
+
+        for (int x = 0; x < 3; x++) State.accel[x] -= 0x200; // center around zero.
     }
 
     public static void InterpretIRData12(byte[] data)
@@ -419,7 +422,7 @@ public class WiimoteManager
 
             State.ir[x, 0] = calc[0];
             State.ir[x, 1] = calc[1];
-            State.ir_size[x] = calc[2];
+            State.ir[x, 2] = calc[2];
         }
     }
 
@@ -506,35 +509,72 @@ public class Wiimote
     {
         led = new bool[4];
         accel = new int[3];
-        ir = new int[4,2];
-        ir_size = new int[4];
+        ir = new int[4,3];
     }
 
     public bool[] led;
+    // Current wiimote-space accelration, in wiimote coordinate system.
+    // These are RAW values, so they may be off.  See CalibrateAccel().
+    // This is only updated if the Wiimote has a report mode with Accel
+    // Range:            -128 to 128
+    // Up/Down:          +Z/-Z
+    // Left/Right:       +X/-Z
+    // Forward/Backward: -Y/+Y
     public int[] accel;
-
+    
+    // Current wiimote RAW IR data.  Size = [4,3].  Wiimote IR data can
+    // detect up to four IR dots.  Data = -1 if it is inapplicable (for
+    // example, if there are less than four dots, or if size data is
+    // unavailable).
+    // This is only updated if the Wiimote has a report mode with IR
+    // 
+    // int[dot index, x (0) / y (1) / size (2)]
     public int[,] ir;
-    public int[] ir_size;
 
+    // Raw data for any extension controllers connected to the wiimote
+    // This is only updated if the Wiimote has a report mode with Extensions.
     public byte[] extension;
 
+    // True if the Wiimote's batteries are low, as reported by the Wiimote.
+    // This is only updated when the Wiimote sends status reports.
+    // See also: battery_level
     public bool battery_low;
+    // True if an extension controller is connected, as reported by the Wiimote.
+    // This is only updated when the Wiimote sends status reports.
     public bool ext_connected;
+    // True if the speaker is currently enabled, as reported by the Wiimote.
+    // This is only updated when the Wiimote sends status reports.
     public bool speaker_enabled;
+    // True if IR is currently enabled, as reported by the Wiimote.
+    // This is only updated when the Wiimote sends status reports.
     public bool ir_enabled;
 
+    // The current battery level, as reported by the Wiimote.
+    // This is only updated when the Wiimote sends status reports.
+    // See also: battery_low
     public byte battery_level;
 
+    // Button: D-Pad Left
     public bool d_left;
+    // Button: D-Pad Right
     public bool d_right;
+    // Button: D-Pad Up
     public bool d_up;
+    // Button: D-Pad Down
     public bool d_down;
+    // Button: A
     public bool a;
+    // Button: B
     public bool b;
+    // Button: 1 (one)
     public bool one;
+    // Button: 2 (two)
     public bool two;
+    // Button: + (plus)
     public bool plus;
+    // Button: - (minus)
     public bool minus;
+    // Button: Home
     public bool home;
 
 }
