@@ -66,7 +66,7 @@ public class WiimoteManager
 
     #region Setups
 
-    public static bool SetupIRCamera()
+    public static bool SetupIRCamera(IRDataType type = IRDataType.EXTENDED)
     {
         int res;
         // 1. Enable IR Camera (Send 0x04 to Output Report 0x13)
@@ -88,15 +88,26 @@ public class WiimoteManager
         res = SendRegisterWriteRequest(RegisterType.CONTROL, 0xb0001a, new byte[] { 0x63, 0x03 });
         if (res < 0) return false;
         // 6. Write Mode Number to register 0xb00033
-        // Mode #3: 12 byte IR data
-        res = SendRegisterWriteRequest(RegisterType.CONTROL, 0xb00033, new byte[] { 3 });
+        res = SendRegisterWriteRequest(RegisterType.CONTROL, 0xb00033, new byte[] { (byte)type });
         if (res < 0) return false;
         // 7. Write 0x08 to register 0xb00030 (again)
         res = SendRegisterWriteRequest(RegisterType.CONTROL, 0xb00030, new byte[] { 0x08 });
         if (res < 0) return false;
 
-        // We are using data report mode 3, so we need to use this data report mode.
-        res = SendDataReportMode(InputDataType.REPORT_BUTTONS_ACCEL_IR12);
+        switch (type)
+        {
+            case IRDataType.BASIC:
+                res = SendDataReportMode(InputDataType.REPORT_BUTTONS_ACCEL_IR10_EXT6);
+                break;
+            case IRDataType.EXTENDED:
+                res = SendDataReportMode(InputDataType.REPORT_BUTTONS_ACCEL_IR12);
+                break;
+            case IRDataType.FULL:
+                Debug.LogWarning("Interleaved data reporting is currently not supported.");
+                res = SendDataReportMode(InputDataType.REPORT_INTERLEAVED);
+                break;
+        }
+        
         if (res < 0) return false;
         return true;
     }
@@ -316,20 +327,36 @@ public class WiimoteManager
                     ext[x] = data[x + 5];
                 State.extension = ext;
                 break;
-            case InputDataType.REPORT_BUTTONS_IR10_EXT9:
+            case InputDataType.REPORT_BUTTONS_IR10_EXT9: // done.
                 buttons = new byte[] { data[0], data[1] };
                 InterpretButtonData(buttons);
 
-                // TODO
+                ir = new byte[10];
+                for (int x = 0; x < 10; x++)
+                    ir[x] = data[x + 2];
+                InterpretIRData10(ir);
+
+                ext = new byte[9];
+                for (int x = 0; x < 9; x++)
+                    ext[x] = data[x + 12];
+                State.extension = ext;
                 break;
-            case InputDataType.REPORT_BUTTONS_ACCEL_IR10_EXT6:
+            case InputDataType.REPORT_BUTTONS_ACCEL_IR10_EXT6: // done.
                 buttons = new byte[] { data[0], data[1] };
                 InterpretButtonData(buttons);
 
                 accel = new byte[] { data[2], data[3], data[4] };
                 InterpretAccelData(buttons, accel);
 
-                // TODO
+                ir = new byte[10];
+                for (int x = 0; x < 10; x++)
+                    ir[x] = data[x + 5];
+                InterpretIRData10(ir);
+
+                ext = new byte[6];
+                for (int x = 0; x < 6; x++)
+                    ext[x] = data[x + 15];
+                State.extension = ext;
                 break;
             case InputDataType.REPORT_EXT21: // done.
                 ext = new byte[21];
@@ -411,6 +438,53 @@ public class WiimoteManager
         State.accel[2] = ((int)accel[2] << 2) | ((buttons[1] >> 5) & 0xf0);
 
         for (int x = 0; x < 3; x++) State.accel[x] -= 0x200; // center around zero.
+    }
+
+    public static void InterpretIRData10(byte[] data)
+    {
+        if (data.Length != 10) return;
+
+        byte[] half = new byte[5];
+        for (int x = 0; x < 5; x++) half[x] = data[x];
+        int[,] subset = InterperetIRData10_Subset(half);
+        for (int x = 0; x < 2; x++)
+            for (int y = 0; y < 3; y++)
+                State.ir[x, y] = subset[x, y];
+
+        for (int x = 0; x < 5; x++) half[x] = data[x + 5];
+        subset = InterperetIRData10_Subset(half);
+        for (int x = 0; x < 2; x++)
+            for (int y = 0; y < 3; y++)
+                State.ir[x+2, y] = subset[x, y];
+    }
+
+    private static int[,] InterperetIRData10_Subset(byte[] data)
+    {
+        if (data.Length != 5) return new int[,] { { -1, -1, -1 }, { -1, -1, -1 } };
+
+        int x1 = data[0];
+        x1 |= ((int)(data[2] & 0x30)) << 4;
+        int y1 = data[1];
+        y1 |= ((int)(data[2] & 0xc0)) << 2;
+
+        if (data[0] == 0xff && data[1] == 0xff && (data[2] & 0xf0) == 0xf0)
+        {
+            x1 = -1;
+            y1 = -1;
+        }
+
+        int x2 = data[3];
+        x2 |= ((int)(data[2] & 0x03)) << 8;
+        int y2 = data[4];
+        y2 |= ((int)(data[2] & 0x0c)) << 6;
+
+        if (data[3] == 0xff && data[4] == 0xff && (data[2] & 0x0f) == 0x0f)
+        {
+            x1 = -1;
+            y1 = -1;
+        }
+
+        return new int[,] { { x1, y1, -1 }, { x2, y2, -1 } };
     }
 
     public static void InterpretIRData12(byte[] data)
@@ -501,6 +575,26 @@ public class WiimoteManager
         REPORT_INTERLEAVED_ALT = 0x3f
     }
 
+    /// <summary>
+    /// These are the 3 types of IR data accepted by the Wiimote.  They offer more
+    /// or less IR data in exchange for space for other data (such as extension
+    /// controllers or accelerometer data).  The 3 types are:
+    /// 
+    /// BASIC:      10 bytes of data.  Contains position data for each dot only.
+    ///             Works with reports 0x36 and 0x37.
+    /// EXTENDED:   12 bytes of data.  Contains position and size data for each dot.
+    ///             Works with report 0x33 only.
+    /// FULL:       36 bytes of data.  Contains position, size, bounding box, and
+    ///             intensity data for each dot.  Works with interleaved report 
+    ///             0x3e/0x3f only.
+    /// </summary>
+    public enum IRDataType
+    {
+        BASIC = 1,
+        EXTENDED = 3,
+        FULL = 5
+    }
+
 }
 
 [System.Serializable]
@@ -583,5 +677,64 @@ public class Wiimote
     // Button: Home
     public bool home;
 
+    // Calibration data for the accelerometer.  This is not reported
+    // by the wiimote directly - it is instead collected from normal
+    // Wiimote accelerometer data.  Here are the 3 calibration steps:
+    //
+    // 1. Horizontal with the A button facing up
+    // 2. IR sensor down on the table so the expansion port is facing up
+    // 3. Laying on its side, so the left side is facing up
+    // 
+    // By default it is set to experimental calibration data.
+    // 
+    // int[calibration step,calibration data] (size 3x3)
+    public int[,] accel_calib = {
+                                    { -20, -16,  83 },
+                                    { -20,  80, -20 },
+                                    {  84, -20, -12 }
+                                };
+
+    public void CalibrateAccel(AccelCalibrationStep step)
+    {
+        for (int x = 0; x < 3; x++)
+            accel_calib[(int)step, x] = accel[x];
+    }
+
+    public float[] GetAccelZeroPoints()
+    {
+        float[] ret = new float[3];
+        ret[0] = ((float)accel_calib[0, 0] / (float)accel_calib[1, 0]) / 2f;
+        ret[1] = ((float)accel_calib[0, 1] / (float)accel_calib[2, 1]) / 2f;
+        ret[2] = ((float)accel_calib[1, 2] / (float)accel_calib[2, 2]) / 2f;
+        return ret;
+    }
+
+    // Calibrated Accelerometer Data using experimental calibration points.
+    // These values are in Wiimote coordinates (in the direction of gravity)
+    // Range: -1 to 1
+    // Up/Down:          +Z/-Z
+    // Left/Right:       +X/-Z
+    // Forward/Backward: -Y/+Y
+    // See Also: CalibrateAccel(), GetAccelZeroPoints(), accel[]
+    public float[] GetCalibratedAccelData()
+    {
+        float[] o = GetAccelZeroPoints();
+
+        float x_raw = accel[0];
+        float y_raw = accel[1];
+        float z_raw = accel[2];
+
+        float[] ret = new float[3];
+        ret[0] = (x_raw - o[0]) / (accel_calib[2, 0] - o[0]);
+        ret[1] = (y_raw - o[1]) / (accel_calib[1, 1] - o[1]);
+        ret[2] = (z_raw - o[2]) / (accel_calib[0, 2] - o[2]);
+        return ret;
+    }
+}
+
+public enum AccelCalibrationStep {
+    A_BUTTON_UP = 0,
+    EXPANSION_UP = 1,
+    LEFT_SIDE_UP = 2
 }
 }
