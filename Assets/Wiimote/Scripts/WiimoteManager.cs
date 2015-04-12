@@ -1,12 +1,14 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 using System;
 using System.Runtime.InteropServices;
 
 namespace WiimoteApi { 
+
+public delegate void ReadResponder(byte[] data);
+
 public class WiimoteManager
 {
-
     public const ushort vendor_id = 0x057e;
     public const ushort product_id_wiimote = 0x0306;
     public const ushort product_id_wiimoteplus = 0x0330;
@@ -15,6 +17,7 @@ public class WiimoteManager
 
     private static IntPtr hidapi_wiimote = IntPtr.Zero;
     private static bool wiimoteplus;
+    
     public static Wiimote State = new Wiimote();
 
     private static InputDataType last_report_type = InputDataType.REPORT_BUTTONS;
@@ -47,14 +50,14 @@ public class WiimoteManager
 
     public static int SendRaw(byte[] data)
     {
-        if (hidapi_wiimote == IntPtr.Zero) return -1;
+        if (hidapi_wiimote == IntPtr.Zero) return -2;
 
         return HIDapi.hid_write(hidapi_wiimote, data, new UIntPtr(Convert.ToUInt32(data.Length)));
     }
 
     public static int RecieveRaw(byte[] buf)
     {
-        if (hidapi_wiimote == IntPtr.Zero) return -1;
+        if (hidapi_wiimote == IntPtr.Zero) return -2;
 
         HIDapi.hid_set_nonblocking(hidapi_wiimote, 1);
         int res = HIDapi.hid_read(hidapi_wiimote, buf, new UIntPtr(Convert.ToUInt32(buf.Length)));
@@ -112,6 +115,40 @@ public class WiimoteManager
         return true;
     }
 
+    public bool RequestIdentifyWiiMotionPlus()
+    {
+        int res;
+        res = SendRegisterReadRequest(RegisterType.CONTROL, 0xA600FA, 6, State.RespondIdentifyWiiMotionPlus);
+        return res > 0;
+    }
+
+    public bool RequestIdentifyExtension()
+    {
+        int res = SendRegisterReadRequest(RegisterType.CONTROL, 0xA400FA, 6, State.RespondIdentifyExtension);
+        return res > 0;
+    }
+
+    public bool ActivateWiiMotionPlus()
+    {
+        if (!State.wmp_attached)
+            Debug.LogWarning("There is a request to activate the Wii Motion Plus even though it has not been confirmed to exist!  Trying anyway.");
+
+        // Initialize the Wii Motion Plus by writing 0x55 to register 0xA600F0
+        int res = SendRegisterWriteRequest(RegisterType.CONTROL, 0xA600F0, new byte[] { 0x55 });
+        if (res < 0) return false;
+
+        // Activate the Wii Motion Plus as the active extension by writing 0x04 to register 0xA600FE
+        // This does 3 things:
+        // 1. A status report (0x20) will be sent, which indicates that an extension has been
+        //    plugged in - IF there is no extension plugged into the passthrough port.
+        // 2. The standard extension identifier at 0xA400FA now reads 00 00 A4 20 04 05
+        // 3. Extension reports now contain Wii Motion Plus data.
+        res = SendRegisterWriteRequest(RegisterType.CONTROL, 0xA600FE, new byte[] { 0x04 });
+        if (res < 0) return false;
+
+        return true;
+    }
+
     #endregion
 
     #region Write
@@ -128,7 +165,8 @@ public class WiimoteManager
 
         int res = SendRaw(final);
 
-        if (res < 0) Debug.LogError("HidAPI reports error " + res + " on write: " + Marshal.PtrToStringUni(HIDapi.hid_error(hidapi_wiimote)));
+        if (res == -1) Debug.LogError("HidAPI reports error " + res + " on write: " + Marshal.PtrToStringUni(HIDapi.hid_error(hidapi_wiimote)));
+        else if (res < -1) Debug.LogError("Incorrect Input to HIDAPI.  No data has been sent.");
         else Debug.Log("Sent " + res + "b: [" + final[0].ToString("X").PadLeft(2, '0') + "] " + BitConverter.ToString(data));
 
         return res;
@@ -150,7 +188,7 @@ public class WiimoteManager
         if (mode == InputDataType.STATUS_INFO || mode == InputDataType.READ_MEMORY_REGISTERS || mode == InputDataType.ACKNOWLEDGE_OUTPUT_REPORT)
         {
             Debug.LogError("Passed " + mode.ToString() + " to SendDataReportMode!");
-            return -1;
+            return -2;
         }
 
         last_report_type = mode;
@@ -191,8 +229,13 @@ public class WiimoteManager
         return SendWithType(OutputDataType.STATUS_INFO_REQUEST, new byte[] { 0x00 });
     }
 
-    public static int SendRegisterReadRequest(RegisterType type, int offset, int size)
+    public static int SendRegisterReadRequest(RegisterType type, int offset, int size, ReadResponder Responder)
     {
+        if (State.CurrentReadData != null)
+            return -2;
+
+        State.CurrentReadData = new RegisterReadData(offset, size, Responder);
+
         byte address_select = (byte)type;
         byte[] offsetArr = IntToBigEndian(offset, 3);
         byte[] sizeArr = IntToBigEndian(size, 2);
@@ -205,7 +248,7 @@ public class WiimoteManager
 
     public static int SendRegisterWriteRequest(RegisterType type, int offset, byte[] data)
     {
-        if (data.Length > 16) return -1;
+        if (data.Length > 16) return -2;
         
 
         byte address_select = (byte)type;
@@ -265,8 +308,30 @@ public class WiimoteManager
                 else                                        // We haven't requested any data report type, meaning a controller has connected.
                     SendDataReportMode(last_report_type);   // If we don't update the data report mode, no updates will be sent
                 break;
-            case InputDataType.READ_MEMORY_REGISTERS:
-                // TODO
+            case InputDataType.READ_MEMORY_REGISTERS: // done.
+                buttons = new byte[] { data[0], data[1] };
+                InterpretButtonData(buttons);
+
+                if (State.CurrentReadData == null)
+                {
+                    Debug.LogWarning("Recived Register Read Report when none was expected.  Ignoring.");
+                    return status;
+                }
+
+                byte size = (byte)(data[2] >> 4);
+                // lowOffset is reversed because the wiimote reports are in Big Endian order
+                ushort lowOffset = BitConverter.ToUInt16(new byte[] { data[4], data[3] }, 0);
+                ushort expected = (ushort)State.CurrentReadData.ExpectedOffset;
+                if (expected != lowOffset)
+                    Debug.LogWarning("Expected Register Read Offset (" + expected + ") does not match reported offset from Wiimote (" + lowOffset + ")");
+                byte[] read = new byte[size];
+                for (int x = 0; x < size; x++)
+                    read[x] = data[x + 5];
+
+                State.CurrentReadData.AppendData(read);
+                if (State.CurrentReadData.ExpectedOffset >= State.CurrentReadData.Offset + State.CurrentReadData.Size)
+                    State.CurrentReadData = null;
+
                 break;
             case InputDataType.ACKNOWLEDGE_OUTPUT_REPORT:
                 buttons = new byte[] { data[0], data[1] };
@@ -608,6 +673,8 @@ public class Wiimote
         ir = new int[4,3];
     }
 
+    public RegisterReadData CurrentReadData = null;
+
     public bool[] led;
     // Current wiimote-space accelration, in wiimote coordinate system.
     // These are RAW values, so they may be off.  See CalibrateAccel().
@@ -694,6 +761,9 @@ public class Wiimote
                                     {  84, -20, -12 }
                                 };
 
+    public bool wmp_attached = false;
+    public ExtensionController current_ext = ExtensionController.NONE;
+
     public void CalibrateAccel(AccelCalibrationStep step)
     {
         for (int x = 0; x < 3; x++)
@@ -730,11 +800,164 @@ public class Wiimote
         ret[2] = (z_raw - o[2]) / (accel_calib[0, 2] - o[2]);
         return ret;
     }
+
+    public const byte[] ID_InactiveMotionPlus = new byte[] {0x00, 0x00, 0xA6, 0x20, 0x00, 0x05};
+
+    public void RespondIdentifyWiiMotionPlus(byte[] data)
+    {
+        if (data.Length != ID_InactiveMotionPlus.Length)
+        {
+            wmp_attached = false;
+            return;
+        }
+        for (int x = 0; x < data.Length; x++)
+        {
+            if (data[x] != ID_InactiveMotionPlus[x])
+            {
+                wmp_attached = false;
+                return;
+            }
+        }
+        wmp_attached = true;
+    }
+
+    public const long ID_ActiveMotionPlus           = 0x0000A4200405;
+    public const long ID_ActiveMotionPlus_Nunchuck  = 0x0000A4200505;
+    public const long ID_ActiveMotionPlus_Classic   = 0x0000A4200705;
+    public const long ID_Nunchuck                   = 0x0000A4200000;
+    public const long ID_Classic                    = 0x0000A4200101;
+    public const long ID_ClassicPro                 = 0x0100A4200101;
+
+
+    public void RespondIdentifyExtension(byte[] data)
+    {
+        if (data.Length != 6)
+            return;
+
+        long val = BitConverter.ToInt64(data, 0);
+        if (val == ID_ActiveMotionPlus)
+            current_ext = ExtensionController.MOTIONPLUS;
+        else if (val == ID_ActiveMotionPlus_Nunchuck)
+            current_ext = ExtensionController.MOTIONPLUS_NUNCHUCK;
+        else if (val == ID_ActiveMotionPlus_Classic)
+            current_ext = ExtensionController.MOTIONPLUS_CLASSIC;
+        else if (val == ID_ClassicPro)
+            current_ext = ExtensionController.CLASSIC_PRO;
+        else if (val == ID_Nunchuck)
+            current_ext = ExtensionController.NUNCHUCK;
+        else if (val == ID_Classic)
+            current_ext = ExtensionController.CLASSIC;
+        else
+            current_ext = ExtensionController.NONE;
+    }
+}
+
+public class WiimotePlusData
+{
+    public int PitchSpeed = 0;
+    public int YawSpeed = 0;
+    public int RollSpeed = 0;
+    public bool PitchSlow = false;
+    public bool YawSlow = false;
+    public bool RollSlow = false;
+    public bool ExtensionConnected = false;
+
+    public void InterpretExtensionData(byte[] data)
+    {
+        if (data.Length < 6)
+        {
+            PitchSpeed = 0;
+            YawSpeed = 0;
+            RollSpeed = 0;
+            PitchSlow = false;
+            YawSlow = false;
+            RollSlow = false;
+            ExtensionConnected = false;
+            return;
+        }
+
+        YawSpeed = data[0];
+        YawSpeed |= (int)(data[3] & 0xfc) << 6;
+        RollSpeed = data[1];
+        RollSpeed |= (int)(data[4] & 0xfc) << 6;
+        PitchSpeed = data[2];
+        PitchSpeed |= (int)(data[5] & 0xfc) << 6;
+
+        YawSlow = (data[3] & 0x02) == 0x02;
+        PitchSlow = (data[3] & 0x01) == 0x01;
+        RollSlow = (data[4] & 0x02) == 0x02;
+        ExtensionConnected = (data[4] & 0x01) == 0x01;
+    }
+}
+
+public enum ExtensionController
+{
+    NONE, NUNCHUCK, CLASSIC, CLASSIC_PRO, MOTIONPLUS, MOTIONPLUS_NUNCHUCK, MOTIONPLUS_CLASSIC
 }
 
 public enum AccelCalibrationStep {
     A_BUTTON_UP = 0,
     EXPANSION_UP = 1,
     LEFT_SIDE_UP = 2
+}
+
+public class RegisterReadData
+{
+    public RegisterReadData(int Offset, int Size, ReadResponder Responder)
+    {
+        _Offset = Offset;
+        _Size = Size;
+        _Buffer = new byte[Size];
+        _ExpectedOffset = Offset;
+        _Responder = Responder;
+    }
+
+    public int ExpectedOffset
+    {
+        get { return _ExpectedOffset; }
+    }
+    private int _ExpectedOffset;
+
+    public byte[] Buffer
+    {
+        get { return _Buffer; }
+    }
+    private byte[] _Buffer;
+
+    public int Offset
+    {
+        get { return _Offset; }
+    }
+    private int _Offset;
+
+    public int Size
+    {
+        get { return _Size; }
+    }
+    private int _Size;
+
+    private ReadResponder _Responder;
+
+    public bool AppendData(byte[] data)
+    {
+        int start = _ExpectedOffset - _Offset;
+        int end = start + data.Length;
+
+        if (end >= _Buffer.Length)
+            return false;
+
+        for (int x = start; x < end; x++)
+        {
+            _Buffer[x] = data[x - start];
+        }
+
+        _ExpectedOffset += data.Length;
+
+        if (_ExpectedOffset >= _Offset + _Size)
+            _Responder(_Buffer);
+
+        return true;
+    }
+
 }
 }
