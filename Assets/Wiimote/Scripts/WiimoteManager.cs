@@ -115,20 +115,20 @@ public class WiimoteManager
         return true;
     }
 
-    public bool RequestIdentifyWiiMotionPlus()
+    public static bool RequestIdentifyWiiMotionPlus()
     {
         int res;
         res = SendRegisterReadRequest(RegisterType.CONTROL, 0xA600FA, 6, State.RespondIdentifyWiiMotionPlus);
         return res > 0;
     }
 
-    public bool RequestIdentifyExtension()
+    public static bool RequestIdentifyExtension()
     {
         int res = SendRegisterReadRequest(RegisterType.CONTROL, 0xA400FA, 6, State.RespondIdentifyExtension);
         return res > 0;
     }
 
-    public bool ActivateWiiMotionPlus()
+    public static bool ActivateWiiMotionPlus()
     {
         if (!State.wmp_attached)
             Debug.LogWarning("There is a request to activate the Wii Motion Plus even though it has not been confirmed to exist!  Trying anyway.");
@@ -146,6 +146,21 @@ public class WiimoteManager
         res = SendRegisterWriteRequest(RegisterType.CONTROL, 0xA600FE, new byte[] { 0x04 });
         if (res < 0) return false;
 
+        return true;
+    }
+
+    public static bool ActivateExtension()
+    {
+        if (!State.ext_connected)
+            Debug.LogWarning("There is a request to activate an Extension controller even though it has not been confirmed to exist!  Trying anyway.");
+
+        // 1. Initialize the Extension by writing 0x55 to register 0xA400F0
+        int res = SendRegisterWriteRequest(RegisterType.CONTROL, 0xA400F0, new byte[] { 0x55 });
+        if (res < 0) return false;
+
+        // 2. Activate the Extension by writing 0x00 to register 0xA400FB
+        res = SendRegisterWriteRequest(RegisterType.CONTROL, 0xA400FB, new byte[] { 0x00 });
+        if (res < 0) return false;
         return true;
     }
 
@@ -232,7 +247,11 @@ public class WiimoteManager
     public static int SendRegisterReadRequest(RegisterType type, int offset, int size, ReadResponder Responder)
     {
         if (State.CurrentReadData != null)
+        {
+            Debug.LogWarning("Aborting read request; There is already a read request pending!");
             return -2;
+        }
+            
 
         State.CurrentReadData = new RegisterReadData(offset, size, Responder);
 
@@ -304,9 +323,23 @@ public class WiimoteManager
                 State.led[3] = (flags & 0x80) == 0x80;
 
                 if (expecting_status_report)
+                {
                     expecting_status_report = false;
+                }
                 else                                        // We haven't requested any data report type, meaning a controller has connected.
+                {
+                    Debug.Log("An extension has been connected or disconnected.");
+                    
                     SendDataReportMode(last_report_type);   // If we don't update the data report mode, no updates will be sent
+                    if (State.ext_connected)                // The wiimote doesn't allow reading from the extension identifier
+                    {                                       // when nothing is connected.
+                        ActivateExtension();
+                        RequestIdentifyExtension();         // Identify what extension was connected.
+                    } else
+                    {
+                        State.current_ext = ExtensionController.NONE;
+                    }
+                }
                 break;
             case InputDataType.READ_MEMORY_REGISTERS: // done.
                 buttons = new byte[] { data[0], data[1] };
@@ -318,7 +351,14 @@ public class WiimoteManager
                     return status;
                 }
 
-                byte size = (byte)(data[2] >> 4);
+                byte size = (byte)((data[2] >> 4) + 0x01);
+                byte error = (byte)(data[2] & 0x0f);
+                if (error == 0x07)
+                {
+                    Debug.LogError("Wiimote reports Read Register error 7: Attempting to read from a write-only register.  Aborting read.");
+                    State.CurrentReadData = null;
+                    return status;
+                }
                 // lowOffset is reversed because the wiimote reports are in Big Endian order
                 ushort lowOffset = BitConverter.ToUInt16(new byte[] { data[4], data[3] }, 0);
                 ushort expected = (ushort)State.CurrentReadData.ExpectedOffset;
@@ -761,6 +801,10 @@ public class Wiimote
                                     {  84, -20, -12 }
                                 };
 
+    // True if a Wii Motion Plus is attached to the Wiimote, and it
+    // has NOT BEEN ACTIVATED.  When the WMP is activated this value is
+    // false.  This is only updated when the state is requested from
+    // Wiimote registers (see: RequestIdentifyWiiMotionPlus())
     public bool wmp_attached = false;
     public ExtensionController current_ext = ExtensionController.NONE;
 
@@ -801,7 +845,7 @@ public class Wiimote
         return ret;
     }
 
-    public const byte[] ID_InactiveMotionPlus = new byte[] {0x00, 0x00, 0xA6, 0x20, 0x00, 0x05};
+    public static byte[] ID_InactiveMotionPlus = new byte[] {0x00, 0x00, 0xA6, 0x20, 0x00, 0x05};
 
     public void RespondIdentifyWiiMotionPlus(byte[] data)
     {
@@ -834,7 +878,10 @@ public class Wiimote
         if (data.Length != 6)
             return;
 
-        long val = BitConverter.ToInt64(data, 0);
+        byte[] resized = new byte[8];
+        for (int x = 0; x < 6; x++) resized[x] = data[5-x];
+        long val = BitConverter.ToInt64(resized, 0);
+
         if (val == ID_ActiveMotionPlus)
             current_ext = ExtensionController.MOTIONPLUS;
         else if (val == ID_ActiveMotionPlus_Nunchuck)
@@ -849,6 +896,48 @@ public class Wiimote
             current_ext = ExtensionController.CLASSIC;
         else
             current_ext = ExtensionController.NONE;
+    }
+}
+
+public class NunchuckData
+{
+    // Nunchuck Acceleration values.  These are in the same (RAW) format
+    // as Wiimote.accel[].
+    public int[] accel;
+    // Nunchuck Analog Stick values.  This is a size 2 Array [X, Y] of
+    // RAW (unprocessed) stick data.  Generally the analog stick returns
+    // values in the range 35-228 for X and 27-220 for Y.  The center for
+    // both is around 128.
+    public byte[] stick;
+    // If the C button has been pressed
+    public bool c;
+    // If the Z button has been pressed
+    public bool z;
+
+    public NunchuckData()
+    {
+        accel = new int[3];
+        stick = new byte[2];
+    }
+
+    public void InterpretExtensionData(byte[] data) {
+        if(data.Length < 6) {
+            accel[0] = 0; accel[1] = 0; accel[2] = 0;
+            stick[0] = 128; stick[1] = 128;
+            c = false;
+            z = false;
+            return;
+        }
+
+        stick[0] = data[0];
+        stick[1] = data[1];
+
+        accel[0] = (int)data[2] << 2; accel[0] |= (data[5] & 0xc0) >> 6;
+        accel[1] = (int)data[3] << 2; accel[1] |= (data[5] & 0x30) >> 4;
+        accel[2] = (int)data[4] << 2; accel[2] |= (data[5] & 0x0c) >> 2;
+
+        c = (data[5] & 0x02) == 0x02;
+        z = (data[5] & 0x01) == 0x01;
     }
 }
 
@@ -943,7 +1032,7 @@ public class RegisterReadData
         int start = _ExpectedOffset - _Offset;
         int end = start + data.Length;
 
-        if (end >= _Buffer.Length)
+        if (end > _Buffer.Length)
             return false;
 
         for (int x = start; x < end; x++)
