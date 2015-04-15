@@ -119,6 +119,13 @@ public class WiimoteDemo : MonoBehaviour {
             Debug.Log(str.ToString());
         }
 
+        if (wiimote != null && wiimote.extension != null && wiimote.current_ext == ExtensionController.NUNCHUCK)
+        {
+            NunchuckData data = new NunchuckData();
+            data.InterpretExtensionData(wiimote.extension);
+            GUILayout.Label("Nunchuck Stick: " + data.stick[0] + ", " + data.stick[1]);
+        }
+
     }
 
     void OnDrawGizmos()
