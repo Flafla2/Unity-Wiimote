@@ -585,8 +585,8 @@ public class WiimoteManager
 
         if (data[3] == 0xff && data[4] == 0xff && (data[2] & 0x0f) == 0x0f)
         {
-            x1 = -1;
-            y1 = -1;
+            x2 = -1;
+            y2 = -1;
         }
 
         return new int[,] { { x1, y1, -1 }, { x2, y2, -1 } };
@@ -820,6 +820,98 @@ public class Wiimote
         ret[0] = ((float)accel_calib[0, 0] / (float)accel_calib[1, 0]) / 2f;
         ret[1] = ((float)accel_calib[0, 1] / (float)accel_calib[2, 1]) / 2f;
         ret[2] = ((float)accel_calib[1, 2] / (float)accel_calib[2, 2]) / 2f;
+        return ret;
+    }
+
+    // Returns the position at which the wiimote is pointing to.  This is a value from 0-1
+    // representing the screen-space pointing position in X and Y.  Assume a 4x3 aspect ratio.
+    public float[] GetPointingPosition()
+    {
+        float[] ret = new float[2];
+        float[] midpoint = GetIRMidpoint();
+        midpoint[0] = 1 - midpoint[0] - 0.5f;
+        midpoint[1] = midpoint[1] - 0.5f;
+
+        float rotation = Mathf.Atan2(accel[2], accel[0]) - (float)(Mathf.PI / 2.0f);
+        float cos = Mathf.Cos(rotation);
+        float sin = Mathf.Sin(rotation);
+        ret[0] = midpoint[0] * cos - midpoint[1] * sin;
+        ret[1] = midpoint[0] * sin - midpoint[1] * cos;
+        ret[0] += 0.5f;
+        ret[1] += 0.5f;
+
+        return ret;
+    }
+
+    // Returns the midpoint of all IR dots, or [0, 0] if none are found.  This is a value from 0-1
+    // representing the screen-space position in X and Y.
+    public float[] GetIRMidpoint()
+    {
+        float[] ret = new float[2];
+        float[,] sensorIR = GetProbableSensorBarIR();
+        ret[0] = sensorIR[0, 0] + sensorIR[1, 0];
+        ret[1] = sensorIR[0, 1] + sensorIR[1, 1];
+        ret[0] /= 2f * 1023f;
+        ret[1] /= 2f * 767f;
+        
+        return ret;
+    }
+
+    private float[] LastIRSeparation = new float[] {0,0};
+    public float[,] GetProbableSensorBarIR()
+    {
+        int count = 0;
+        int[] ind = new int[2];
+        for (int x = 0; x < 4; x++)
+        {
+            if (count > 1 || ir[x, 0] == -1 || ir[x, 1] == -1)
+                continue;
+
+            ind[count] = x;
+            if (count == 1 && ir[ind[0], 0] > ir[x, 0])
+            {
+                ind[1] = ind[0];
+                ind[0] = x;
+            }
+            count++;
+        }
+
+        if (count == 0)
+            return new float[,] { { -1, -1, -1 }, { -1, -1, -1 } };
+
+        float[,] ret = new float[2, 2];
+        for (int x = 0; x < count; x++)
+        {
+            for(int y = 0; y < 2; y++)
+                ret[x, y] = ir[ind[x], y];
+        }
+
+        if (count == 1) // one of the dots are outside of the wiimote FOV
+        {
+            
+            if (ret[0,0] < 1023 / 2) // Left side of the screen, means that it's the right dot
+            {
+                for (int x = 0; x < 2; x++)
+                {
+                    ret[1, x] = ret[0, x];
+                    ret[0, x] -= LastIRSeparation[x];
+                }
+            }
+            else
+            {
+                for (int x = 0; x < 2; x++)
+                {
+                    ret[1, x] = ret[0, x];
+                    ret[1, x] += LastIRSeparation[x];
+                }
+            }
+        }
+        else if (count == 2)
+        {
+            LastIRSeparation[0] = Mathf.Abs(ret[0, 0] - ret[1, 0]);
+            LastIRSeparation[1] = Mathf.Abs(ret[0, 1] - ret[1, 1]);
+        }
+
         return ret;
     }
 

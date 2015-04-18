@@ -8,6 +8,7 @@ public class WiimoteDemo : MonoBehaviour {
 
     public WiimoteModel model;
     public RectTransform[] ir_dots;
+    public RectTransform ir_pointer;
 
     public bool UseCalibratedAccel = false;
 
@@ -47,24 +48,29 @@ public class WiimoteDemo : MonoBehaviour {
 
         if (ir_dots.Length < 4) return;
 
-        for (int i = 0; i < 4; i++)
+        float[,] ir = wiimote.GetProbableSensorBarIR();
+        for (int i = 0; i < 2; i++)
         {
-            float x = (float)wiimote.ir[i, 0] / 1023f;
-            float y = (float)wiimote.ir[i, 1] / 767f;
+            float x = (float)ir[i, 0] / 1023f;
+            float y = (float)ir[i, 1] / 767f;
             if (x == -1 || y == -1) {
                 ir_dots[i].anchorMin = new Vector2(0, 0);
                 ir_dots[i].anchorMax = new Vector2(0, 0);
             }
 
-            float ui_dot_size = (float)wiimote.ir[i, 2] / 15f * 50f;
-            if(wiimote.ir[i,2] != -1)
-                ir_dots[i].sizeDelta = new Vector2(ui_dot_size, ui_dot_size);
-            else
-                ir_dots[i].sizeDelta = new Vector2(20, 20);
+            //float ui_dot_size = (float)ir[i, 2] / 15f * 50f;
+            //if(wiimote.ir[i,2] != -1)
+            //    ir_dots[i].sizeDelta = new Vector2(ui_dot_size, ui_dot_size);
+            //else
+            //    ir_dots[i].sizeDelta = new Vector2(20, 20);
 
             ir_dots[i].anchorMin = new Vector2(x, y);
             ir_dots[i].anchorMax = new Vector2(x, y);
         }
+
+        float[] pointer = wiimote.GetPointingPosition();
+        ir_pointer.anchorMin = new Vector2(pointer[0], pointer[1]);
+        ir_pointer.anchorMax = new Vector2(pointer[0], pointer[1]);
 	}
 
     void OnGUI()
