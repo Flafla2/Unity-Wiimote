@@ -43,7 +43,7 @@ public class HIDapi {
     public static extern void hid_close(IntPtr device);
 
     [DllImport("hidapi")]
-    public static extern IntPtr open_path(string path);
+    public static extern IntPtr hid_open_path(string path);
 
     [DllImport("hidapi")]
     public static extern int hid_read(IntPtr device, byte[] data, UIntPtr length);
