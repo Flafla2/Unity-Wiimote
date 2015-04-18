@@ -49,12 +49,17 @@ public class WiimoteDemo : MonoBehaviour {
 
         for (int i = 0; i < 4; i++)
         {
+
             float x = (float)wiimote.ir[i, 0] / 1023f;
             float y = (float)wiimote.ir[i, 1] / 767f;
+
             if (x == -1 || y == -1) {
                 ir_dots[i].anchorMin = new Vector2(0, 0);
                 ir_dots[i].anchorMax = new Vector2(0, 0);
+                return;
             }
+
+            //Debug.Log(x+" "+y);
 
             float ui_dot_size = (float)wiimote.ir[i, 2] / 15f * 50f;
             if(wiimote.ir[i,2] != -1)
@@ -123,7 +128,8 @@ public class WiimoteDemo : MonoBehaviour {
         {
             NunchuckData data = new NunchuckData();
             data.InterpretExtensionData(wiimote.extension);
-            GUILayout.Label("Nunchuck Stick: " + data.stick[0] + ", " + data.stick[1]);
+            float[] stick01 = data.GetStick01();
+            GUILayout.Label("Nunchuck Stick: " + stick01[0] + ", " + stick01[1]);
         }
 
     }
