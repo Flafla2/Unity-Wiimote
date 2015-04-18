@@ -26,13 +26,12 @@ public class WiimoteDemo : MonoBehaviour {
 	void Update () {
         if (!WiimoteManager.HasWiimote()) { velocity = Vector3.zero; return; }
 
+        wiimote = WiimoteManager.Wiimotes[0];
         int ret;
         do
         {
-            ret = WiimoteManager.ReadWiimoteData();
+            ret = WiimoteManager.ReadWiimoteData(wiimote);
         } while (ret > 0);
-
-        wiimote = WiimoteManager.State;
 
         model.a.enabled = wiimote.a;
         model.b.enabled = wiimote.b;
@@ -89,26 +88,26 @@ public class WiimoteDemo : MonoBehaviour {
         }
 
         if (GUILayout.Button("Cleanup"))
-            WiimoteManager.Cleanup();
+            WiimoteManager.Cleanup(wiimote);
 
         for (int x = 0; x < 4;x++ )
             if (GUILayout.Button("LED Test "+x))
-                WiimoteManager.SendPlayerLED(x == 0, x == 1, x == 2, x == 3);
+                WiimoteManager.SendPlayerLED(wiimote, x == 0, x == 1, x == 2, x == 3);
 
         if(GUILayout.Button("Set Report: Button/Accel"))
-            WiimoteManager.SendDataReportMode(WiimoteManager.InputDataType.REPORT_BUTTONS_ACCEL);
+            WiimoteManager.SendDataReportMode(wiimote, WiimoteManager.InputDataType.REPORT_BUTTONS_ACCEL);
 
         if (GUILayout.Button("Request Status Report"))
-            WiimoteManager.SendStatusInfoRequest();
+            WiimoteManager.SendStatusInfoRequest(wiimote);
 
         if(GUILayout.Button("IR Setup Sequence"))
-            WiimoteManager.SetupIRCamera(WiimoteManager.IRDataType.BASIC);
+            WiimoteManager.SetupIRCamera(wiimote, WiimoteManager.IRDataType.BASIC);
 
         for (int x = 0; x < 3; x++)
         {
             AccelCalibrationStep step = (AccelCalibrationStep)x;
             if (GUILayout.Button("Calibrate Accel: " + step.ToString()))
-                WiimoteManager.State.CalibrateAccel(step);
+                wiimote.CalibrateAccel(step);
         }
 
         if (GUILayout.Button("Print Calibration Data"))
@@ -118,7 +117,7 @@ public class WiimoteDemo : MonoBehaviour {
             {
                 for (int y = 0; y < 3; y++)
                 {
-                    str.Append(WiimoteManager.State.accel_calib[y, x]).Append(" ");
+                    str.Append(wiimote.accel_calib[y, x]).Append(" ");
                 }
                 str.Append("\n");
             }
