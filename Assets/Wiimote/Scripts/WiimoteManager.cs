@@ -33,6 +33,10 @@ public class WiimoteManager
         hidapi_wiimote = HIDapi.hid_open(vendor_id, wiimoteplus ? product_id_wiimoteplus : product_id_wiimote, null);
         WiimoteManager.wiimoteplus = wiimoteplus;
 
+        if(hidapi_wiimote != IntPtr.Zero) { // Initiialize the wiimote
+            SendStatusInfoRequest();
+        }
+
         return hidapi_wiimote != IntPtr.Zero;
     }
 
@@ -82,12 +86,17 @@ public class WiimoteManager
         // 4. Write Sensitivity Block 1 to registers at 0xb00000
         // Wii sensitivity level 3:
         // 02 00 00 71 01 00 aa 00 64
+        // High Sensitivity:
+        // 00 00 00 00 00 00 90 00 41
         res = SendRegisterWriteRequest(RegisterType.CONTROL, 0xb00000, 
             new byte[] { 0x02, 0x00, 0x00, 0x71, 0x01, 0x00, 0xaa, 0x00, 0x64 });
+            //new byte[] {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x90, 0x00, 0x41});
         if (res < 0) return false;
         // 5. Write Sensitivity Block 2 to registers at 0xb0001a
         // Wii sensitivity level 3: 
         // 63 03
+        // High Sensitivity:
+        // 40 00
         res = SendRegisterWriteRequest(RegisterType.CONTROL, 0xb0001a, new byte[] { 0x63, 0x03 });
         if (res < 0) return false;
         // 6. Write Mode Number to register 0xb00033
@@ -313,6 +322,8 @@ public class WiimoteManager
                 InterpretButtonData(buttons);
                 State.battery_level = battery_level;
 
+                bool old_ext_connected = State.ext_connected;
+
                 State.battery_low = (flags & 0x01) == 0x01;
                 State.ext_connected = (flags & 0x02) == 0x02;
                 State.speaker_enabled = (flags & 0x04) == 0x04;
@@ -329,10 +340,12 @@ public class WiimoteManager
                 else                                        // We haven't requested any data report type, meaning a controller has connected.
                 {
                     Debug.Log("An extension has been connected or disconnected.");
-                    
                     SendDataReportMode(last_report_type);   // If we don't update the data report mode, no updates will be sent
-                    if (State.ext_connected)                // The wiimote doesn't allow reading from the extension identifier
-                    {                                       // when nothing is connected.
+                }
+
+                if(State.ext_connected != old_ext_connected) {
+                    if (State.ext_connected)                    // The wiimote doesn't allow reading from the extension identifier
+                    {                                               // when nothing is connected.
                         ActivateExtension();
                         RequestIdentifyExtension();         // Identify what extension was connected.
                     } else
@@ -938,6 +951,18 @@ public class NunchuckData
 
         c = (data[5] & 0x02) == 0x02;
         z = (data[5] & 0x01) == 0x01;
+    }
+
+    public float[] GetStick01() {
+        float[] ret = new float[2];
+        ret[0] = stick[0];
+        ret[0] -= 35;
+        ret[1] = stick[1];
+        ret[1] -= 27;
+        for(int x=0;x<2;x++) {
+            ret[x] /= 193f;
+        }
+        return ret;
     }
 }
 
