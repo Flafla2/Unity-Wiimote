@@ -125,6 +125,7 @@ public class WiimoteManager
                 WriteQueueData wqd = WriteQueue.Dequeue();
                 int res = HIDapi.hid_write(wqd.pointer, wqd.data, new UIntPtr(Convert.ToUInt32(wqd.data.Length)));
                 if (res == -1) Debug.LogError("HidAPI reports error " + res + " on write: " + Marshal.PtrToStringUni(HIDapi.hid_error(wqd.pointer)));
+                else if (Debug_Messages) Debug.Log("Sent " + res + "b: [" + wqd.data[0].ToString("X").PadLeft(2, '0') + "] " + BitConverter.ToString(wqd.data,1));
             }
             Thread.Sleep(MaxWriteFrequency);
         }
@@ -260,9 +261,8 @@ public class WiimoteManager
 
         int res = SendRaw(remote.hidapi_handle, final);
 
-        if (res == -1) Debug.LogError("HidAPI reports error " + res + " on write: " + Marshal.PtrToStringUni(HIDapi.hid_error(remote.hidapi_handle)));
-        else if (res < -1) Debug.LogError("Incorrect Input to HIDAPI.  No data has been sent.");
-        else if (Debug_Messages) Debug.Log("Sent " + res + "b: [" + final[0].ToString("X").PadLeft(2, '0') + "] " + BitConverter.ToString(data));
+        if (res < -1) Debug.LogError("Incorrect Input to HIDAPI.  No data has been sent.");
+        
 
         return res;
     }
@@ -1108,7 +1108,7 @@ public class NunchuckData
     }
 
     public void InterpretExtensionData(byte[] data) {
-        if(data.Length < 6) {
+        if(data == null || data.Length < 6) {
             accel[0] = 0; accel[1] = 0; accel[2] = 0;
             stick[0] = 128; stick[1] = 128;
             c = false;
