@@ -9,8 +9,6 @@ public delegate void ReadResponder(byte[] data);
 
 public class WiimoteManager
 {
-//#define WIIMOTEAPI_DEBUG
-
     public const ushort vendor_id = 0x057e;
     public const ushort product_id_wiimote = 0x0306;
     public const ushort product_id_wiimoteplus = 0x0330;
@@ -19,6 +17,8 @@ public class WiimoteManager
 
     private static InputDataType last_report_type = InputDataType.REPORT_BUTTONS;
     private static bool expecting_status_report = false;
+
+    public static bool Debug_Messages = false;
 
     // ------------- RAW HIDAPI INTERFACE ------------- //
 
@@ -55,9 +55,10 @@ public class WiimoteManager
             {
                 remote = new Wiimote();
                 remote.hidapi_path = enumerate.path;
-#if WIIMOTEAPI_DEBUG
-                Debug.Log("Found New Remote: "+remote.hidapi_path);
-#endif
+                
+                if(Debug_Messages)
+                    Debug.Log("Found New Remote: "+remote.hidapi_path);
+
                 remote.hidapi_handle = HIDapi.hid_open_path(remote.hidapi_path);
                 remote.wiimoteplus = wiimoteplus;
                 Wiimotes.Add(remote);
@@ -226,9 +227,8 @@ public class WiimoteManager
 
         if (res == -1) Debug.LogError("HidAPI reports error " + res + " on write: " + Marshal.PtrToStringUni(HIDapi.hid_error(remote.hidapi_handle)));
         else if (res < -1) Debug.LogError("Incorrect Input to HIDAPI.  No data has been sent.");
-#if WIIMOTEAPI_DEBUG
-        else Debug.Log("Sent " + res + "b: [" + final[0].ToString("X").PadLeft(2, '0') + "] " + BitConverter.ToString(data));
-#endif
+        else if (Debug_Messages) Debug.Log("Sent " + res + "b: [" + final[0].ToString("X").PadLeft(2, '0') + "] " + BitConverter.ToString(data));
+
         return res;
     }
 
@@ -340,9 +340,8 @@ public class WiimoteManager
         for (int x = 0; x < data.Length; x++)
             data[x] = buf[x + 1];
 
-#if WIIMOTEAPI_DEBUG
-        Debug.Log("Recieved: [" + buf[0].ToString("X").PadLeft(2, '0') + "] " + BitConverter.ToString(data));
-#endif
+        if (Debug_Messages)
+            Debug.Log("Recieved: [" + buf[0].ToString("X").PadLeft(2, '0') + "] " + BitConverter.ToString(data));
 
         // Variable names used throughout the switch/case block
         byte[] buttons;
