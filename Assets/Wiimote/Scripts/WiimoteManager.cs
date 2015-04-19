@@ -27,6 +27,9 @@ public class WiimoteManager
 
         IntPtr ptr = HIDapi.hid_enumerate(vendor_id, wiimoteplus ? product_id_wiimoteplus : product_id_wiimote);
         IntPtr cur_ptr = ptr;
+        if (ptr == IntPtr.Zero)
+            return false;
+
         hid_device_info enumerate = (hid_device_info)Marshal.PtrToStructure(ptr, typeof(hid_device_info));
 
         bool found = false;
