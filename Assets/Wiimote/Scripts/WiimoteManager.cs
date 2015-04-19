@@ -978,7 +978,7 @@ public class Wiimote
             count++;
         }
 
-        if (count == 0)
+        if (count < 2)
             return new float[,] { { -1, -1, -1 }, { -1, -1, -1 } };
 
         float[,] ret = new float[2, 2];
