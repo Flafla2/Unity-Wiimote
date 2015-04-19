@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System;
+using System.Threading;
 using System.Runtime.InteropServices;
 
 namespace WiimoteApi { 
@@ -19,6 +20,10 @@ public class WiimoteManager
     private static bool expecting_status_report = false;
 
     public static bool Debug_Messages = false;
+
+    public static int MaxWriteFrequency = 20; // In ms
+    private static float LastWriteTime = 0;
+    private static Queue<WriteQueueData> WriteQueue;
 
     // ------------- RAW HIDAPI INTERFACE ------------- //
 
@@ -80,6 +85,7 @@ public class WiimoteManager
     {
         if (remote.hidapi_handle != IntPtr.Zero)
             HIDapi.hid_close(remote.hidapi_handle);
+
         Wiimotes.Remove(remote);
     }
 
@@ -92,7 +98,35 @@ public class WiimoteManager
     {
         if (hidapi_wiimote == IntPtr.Zero) return -2;
 
-        return HIDapi.hid_write(hidapi_wiimote, data, new UIntPtr(Convert.ToUInt32(data.Length)));
+        if (WriteQueue == null)
+        {
+            WriteQueue = new Queue<WriteQueueData>();
+            SendThreadObj = new Thread(new ThreadStart(SendThread));
+            SendThreadObj.Start();
+        }
+
+        WriteQueueData wqd = new WriteQueueData();
+        wqd.pointer = hidapi_wiimote;
+        wqd.data = data;
+        lock(WriteQueue)
+            WriteQueue.Enqueue(wqd);
+
+        return 0; // TODO: Better error handling
+    }
+
+    private static Thread SendThreadObj;
+    private static void SendThread()
+    {
+        while (true)
+        {
+            lock (WriteQueue)
+            {
+                WriteQueueData wqd = WriteQueue.Dequeue();
+                int res = HIDapi.hid_write(wqd.pointer, wqd.data, new UIntPtr(Convert.ToUInt32(wqd.data.Length)));
+                if (res == -1) Debug.LogError("HidAPI reports error " + res + " on write: " + Marshal.PtrToStringUni(HIDapi.hid_error(wqd.pointer)));
+            }
+            Thread.Sleep(MaxWriteFrequency);
+        }
     }
 
     public static int RecieveRaw(IntPtr hidapi_wiimote, byte[] buf)
@@ -749,6 +783,11 @@ public class WiimoteManager
         BASIC = 1,
         EXTENDED = 3,
         FULL = 5
+    }
+
+    private class WriteQueueData {
+        public IntPtr pointer;
+        public byte[] data;
     }
 
 }
