@@ -68,6 +68,7 @@ public class WiimoteManager
                 remote.wiimoteplus = wiimoteplus;
                 Wiimotes.Add(remote);
 
+                SendDataReportMode(remote, InputDataType.REPORT_BUTTONS);
                 SendStatusInfoRequest(remote);
             }
 
