@@ -927,16 +927,20 @@ public class Wiimote
     {
         float[] ret = new float[2];
         float[] midpoint = GetIRMidpoint();
+        if (midpoint[0] < 0 || midpoint[1] < 0)
+            return new float[] { -1, -1 };
         midpoint[0] = 1 - midpoint[0] - 0.5f;
         midpoint[1] = midpoint[1] - 0.5f;
 
         float rotation = Mathf.Atan2(accel[2], accel[0]) - (float)(Mathf.PI / 2.0f);
         float cos = Mathf.Cos(rotation);
         float sin = Mathf.Sin(rotation);
-        ret[0] = midpoint[0] * cos - midpoint[1] * sin;
-        ret[1] = midpoint[0] * sin - midpoint[1] * cos;
+        ret[0] =  midpoint[0] * cos + midpoint[1] * sin;
+        ret[1] = -midpoint[0] * sin + midpoint[1] * cos;
         ret[0] += 0.5f;
         ret[1] += 0.5f;
+
+        ret[1] = 1 - ret[1];
 
         return ret;
     }
