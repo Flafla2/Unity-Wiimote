@@ -6,8 +6,6 @@ using System.Runtime.InteropServices;
 
 namespace WiimoteApi { 
 
-public delegate void ReadResponder(byte[] data);
-
 public class WiimoteManager
 {
     public const ushort vendor_id = 0x057e;
@@ -400,14 +398,7 @@ public class WiimoteManager
 
                 bool old_ext_connected = remote.ext_connected;
 
-                remote.battery_low = (flags & 0x01) == 0x01;
-                remote.ext_connected = (flags & 0x02) == 0x02;
-                remote.speaker_enabled = (flags & 0x04) == 0x04;
-                remote.ir_enabled = (flags & 0x08) == 0x08;
-                remote.led[0] = (flags & 0x10) == 0x10;
-                remote.led[1] = (flags & 0x20) == 0x20;
-                remote.led[2] = (flags & 0x40) == 0x40;
-                remote.led[3] = (flags & 0x80) == 0x80;
+                // TODO: Status data
 
                 if (expecting_status_report)
                 {
@@ -605,111 +596,7 @@ public class WiimoteManager
         return 0;
     }
 
-    public static void InterpretButtonData(Wiimote remote, byte[] data)
-    {
-        if (data == null || data.Length != 2) return;
-
-        remote.d_left = (data[0] & 0x01) == 0x01;
-        remote.d_right = (data[0] & 0x02) == 0x02;
-        remote.d_down = (data[0] & 0x04) == 0x04;
-        remote.d_up = (data[0] & 0x08) == 0x08;
-        remote.plus = (data[0] & 0x10) == 0x10;
-
-        remote.two = (data[1] & 0x01) == 0x01;
-        remote.one = (data[1] & 0x02) == 0x02;
-        remote.b = (data[1] & 0x04) == 0x04;
-        remote.a = (data[1] & 0x08) == 0x08;
-        remote.minus = (data[1] & 0x10) == 0x10;
-
-        remote.home = (data[1] & 0x80) == 0x80;
-    }
-
-    public static void InterpretAccelData(Wiimote remote, byte[] buttons, byte[] accel)
-    {
-        if (buttons == null || accel == null || buttons.Length != 2 || accel.Length != 3) return;
-
-        remote.accel[0] = ((int)accel[0] << 2) | ((buttons[0] >> 5) & 0xff);
-        remote.accel[1] = ((int)accel[1] << 2) | ((buttons[1] >> 4) & 0xf0);
-        remote.accel[2] = ((int)accel[2] << 2) | ((buttons[1] >> 5) & 0xf0);
-
-        for (int x = 0; x < 3; x++) remote.accel[x] -= 0x200; // center around zero.
-    }
-
-    public static void InterpretIRData10(Wiimote remote, byte[] data)
-    {
-        if (data.Length != 10) return;
-
-        byte[] half = new byte[5];
-        for (int x = 0; x < 5; x++) half[x] = data[x];
-        int[,] subset = InterperetIRData10_Subset(half);
-        for (int x = 0; x < 2; x++)
-            for (int y = 0; y < 3; y++)
-                remote.ir[x, y] = subset[x, y];
-
-        for (int x = 0; x < 5; x++) half[x] = data[x + 5];
-        subset = InterperetIRData10_Subset(half);
-        for (int x = 0; x < 2; x++)
-            for (int y = 0; y < 3; y++)
-                remote.ir[x+2, y] = subset[x, y];
-    }
-
-    private static int[,] InterperetIRData10_Subset(byte[] data)
-    {
-        if (data.Length != 5) return new int[,] { { -1, -1, -1 }, { -1, -1, -1 } };
-
-        int x1 = data[0];
-        x1 |= ((int)(data[2] & 0x30)) << 4;
-        int y1 = data[1];
-        y1 |= ((int)(data[2] & 0xc0)) << 2;
-
-        if (data[0] == 0xff && data[1] == 0xff && (data[2] & 0xf0) == 0xf0)
-        {
-            x1 = -1;
-            y1 = -1;
-        }
-
-        int x2 = data[3];
-        x2 |= ((int)(data[2] & 0x03)) << 8;
-        int y2 = data[4];
-        y2 |= ((int)(data[2] & 0x0c)) << 6;
-
-        if (data[3] == 0xff && data[4] == 0xff && (data[2] & 0x0f) == 0x0f)
-        {
-            x2 = -1;
-            y2 = -1;
-        }
-
-        return new int[,] { { x1, y1, -1 }, { x2, y2, -1 } };
-    }
-
-    public static void InterpretIRData12(Wiimote remote, byte[] data)
-    {
-        if (data.Length != 12) return;
-        for (int x = 0; x < 4; x++)
-        {
-            int i = x * 3; // starting index of data
-            byte[] subset = new byte[] { data[i], data[i + 1], data[i + 2] };
-            int[] calc = InterpretIRData12_Subset(subset);
-
-            remote.ir[x, 0] = calc[0];
-            remote.ir[x, 1] = calc[1];
-            remote.ir[x, 2] = calc[2];
-        }
-    }
-
-    private static int[] InterpretIRData12_Subset(byte[] data)
-    {
-        if (data.Length != 3) return new int[] { -1, -1, -1 };
-        if (data[0] == 0xff && data[1] == 0xff && data[2] == 0xff) return new int[] { -1, -1, -1 };
-
-        int x = data[0];
-        x |= ((int)(data[2] & 0x30)) << 4;
-        int y = data[1];
-        y |= ((int)(data[2] & 0xc0)) << 2;
-        int size = data[2] & 0x0f;
-
-        return new int[] { x, y, size };
-    }
+    
     #endregion
 
     // ------------- UTILITY ------------- //
@@ -728,3 +615,4 @@ public class WiimoteManager
         public byte[] data;
     }
 }
+} // namespace WiimoteApi
