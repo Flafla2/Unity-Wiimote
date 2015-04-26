@@ -37,6 +37,16 @@ public class Wiimote
     private InputDataType last_report_type = InputDataType.REPORT_BUTTONS;
     private bool expecting_status_report = false;
 
+    // True if a Wii Motion Plus is attached to the Wiimote, and it
+    // has NOT BEEN ACTIVATED.  When the WMP is activated this value is
+    // false.  This is only updated when the remote is requested from
+    // Wiimote registers (see: RequestIdentifyWiiMotionPlus())
+    public bool wmp_attached { get { return _wmp_attached; } }
+    private bool _wmp_attached = false;
+
+    public ExtensionController current_ext { get { return _current_ext; } }
+    private ExtensionController _current_ext = ExtensionController.NONE;
+
     public Wiimote(IntPtr hidapi_handle, string hidapi_path, bool wiimoteplus)
     {
         _hidapi_handle  = hidapi_handle;
@@ -49,21 +59,6 @@ public class Wiimote
         _Status = new StatusData(this);
         _Extension = null;
     }
-    
-    // Raw data for any extension controllers connected to the wiimote
-    // This is only updated if the Wiimote has a report mode with Extensions.
-    public ReadOnlyArray<byte> extension { get { return _extension_readonly; } }
-    private ReadOnlyArray<byte> _extension_readonly;
-    private byte[] _extension { set { _extension_readonly = new ReadOnlyArray<byte>(value); } }
-
-    // True if a Wii Motion Plus is attached to the Wiimote, and it
-    // has NOT BEEN ACTIVATED.  When the WMP is activated this value is
-    // false.  This is only updated when the remote is requested from
-    // Wiimote registers (see: RequestIdentifyWiiMotionPlus())
-    public bool wmp_attached { get { return _wmp_attached; } }
-    private bool _wmp_attached = false;
-    public ExtensionController current_ext { get { return _current_ext; } }
-    private ExtensionController _current_ext = ExtensionController.NONE;
 
     public static byte[] ID_InactiveMotionPlus = new byte[] {0x00, 0x00, 0xA6, 0x20, 0x00, 0x05};
 
@@ -103,19 +98,42 @@ public class Wiimote
         long val = BitConverter.ToInt64(resized, 0);
 
         if (val == ID_ActiveMotionPlus)
+        {
             _current_ext = ExtensionController.MOTIONPLUS;
+            if(_Extension == null || _Extension.GetType() != typeof(MotionPlusData))
+                _Extension = new MotionPlusData(this);
+        }
         else if (val == ID_ActiveMotionPlus_Nunchuck)
+        {
             _current_ext = ExtensionController.MOTIONPLUS_NUNCHUCK;
+            _Extension = null;
+        }
         else if (val == ID_ActiveMotionPlus_Classic)
+        {
             _current_ext = ExtensionController.MOTIONPLUS_CLASSIC;
+            _Extension = null;
+        }
         else if (val == ID_ClassicPro)
+        {
             _current_ext = ExtensionController.CLASSIC_PRO;
+            _Extension = null;
+        }
         else if (val == ID_Nunchuck)
+        {
             _current_ext = ExtensionController.NUNCHUCK;
+            if (_Extension == null || _Extension.GetType() != typeof(NunchuckData))
+                _Extension = new NunchuckData(this);
+        }
         else if (val == ID_Classic)
+        {
             _current_ext = ExtensionController.CLASSIC;
+            _Extension = null;
+        }
         else
+        {
             _current_ext = ExtensionController.NONE;
+            _Extension = null;
+        }
     }
 
     #region Setups
@@ -452,7 +470,8 @@ public class Wiimote
                 for (int x = 0; x < ext.Length; x++)
                     ext[x] = data[x + 2];
 
-                _extension = ext;
+                if (Extension != null)
+                    Extension.InterpretData(ext);
                 break;
             case InputDataType.REPORT_BUTTONS_ACCEL_IR12: // done.
                 buttons = new byte[] { data[0], data[1] };
@@ -473,7 +492,9 @@ public class Wiimote
                 ext = new byte[19];
                 for (int x = 0; x < ext.Length; x++)
                     ext[x] = data[x + 2];
-                _extension = ext;
+
+                if (Extension != null)
+                    Extension.InterpretData(ext);
                 break;
             case InputDataType.REPORT_BUTTONS_ACCEL_EXT16: // done.
                 buttons = new byte[] { data[0], data[1] };
@@ -485,7 +506,9 @@ public class Wiimote
                 ext = new byte[16];
                 for (int x = 0; x < ext.Length; x++)
                     ext[x] = data[x + 5];
-                _extension = ext;
+
+                if (Extension != null)
+                    Extension.InterpretData(ext);
                 break;
             case InputDataType.REPORT_BUTTONS_IR10_EXT9: // done.
                 buttons = new byte[] { data[0], data[1] };
@@ -499,7 +522,9 @@ public class Wiimote
                 ext = new byte[9];
                 for (int x = 0; x < 9; x++)
                     ext[x] = data[x + 12];
-                _extension = ext;
+
+                if (Extension != null)
+                    Extension.InterpretData(ext);
                 break;
             case InputDataType.REPORT_BUTTONS_ACCEL_IR10_EXT6: // done.
                 buttons = new byte[] { data[0], data[1] };
@@ -516,13 +541,17 @@ public class Wiimote
                 ext = new byte[6];
                 for (int x = 0; x < 6; x++)
                     ext[x] = data[x + 15];
-                _extension = ext;
+
+                if (Extension != null)
+                    Extension.InterpretData(ext);
                 break;
             case InputDataType.REPORT_EXT21: // done.
                 ext = new byte[21];
                 for (int x = 0; x < ext.Length; x++)
                     ext[x] = data[x];
-                _extension = ext;
+
+                if (Extension != null)
+                    Extension.InterpretData(ext);
                 break;
             case InputDataType.REPORT_INTERLEAVED:
                 // TODO
