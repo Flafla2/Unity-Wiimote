@@ -9,7 +9,6 @@ namespace WiimoteApi {
 [System.Serializable]
 public class Wiimote
 {
-
     public RegisterReadData CurrentReadData = null;
     public IntPtr hidapi_handle = IntPtr.Zero;
     public string hidapi_path;
