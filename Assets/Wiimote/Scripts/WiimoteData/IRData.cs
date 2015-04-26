@@ -5,12 +5,12 @@ namespace WiimoteApi
 {
     public class IRData : WiimoteData
     {
-        /// \brief Size: 4x3.  Current wiimote RAW IR data.  Wiimote IR data can
+        /// \brief Size: 4x3.  Current Wii Remote RAW IR data.  Wii Remote IR data can
         ///        detect up to four IR dots.  Data = -1 if it is inapplicable (for
         ///        example, if there are less than four dots, or if size data is
         ///        unavailable).
         ///
-        /// This is only updated if the Wiimote has a report mode with IR
+        /// This is only updated if the Wii Remote has a report mode with IR
         ///
         ///        | Position X | Position Y |  Size  |
         /// Range: |  0 - 1023  |  0 - 767   | 0 - 15 |
@@ -119,7 +119,7 @@ namespace WiimoteApi
             return new int[] { x, y, size };
         }
 
-        /// \brief Size: 2.  Returns the position at which the wiimote is pointing to.  This is a value from 0-1
+        /// \brief Size: 2.  Returns the position at which the Wii Remote is pointing to.  This is a value from 0-1
         ///        representing the screen-space pointing position in X and Y.  Assume a 4x3 aspect ratio.
         public float[] GetPointingPosition()
         {
@@ -160,10 +160,10 @@ namespace WiimoteApi
         private float[] LastIRSeparation = new float[] { 0, 0 };
         /// \brief Size: 2x2.  Returns the most probable positions of the two sensor bar dots.
         ///        If less than two dots are found, returns -1 for all data.
-        /// \param predict If true, and one of the dots is outside of the Wiimote's field of view,
+        /// \param predict If true, and one of the dots is outside of the Wii Remote's field of view,
         ///                WiimoteApi will attempt to predict the other dot's position outside of the screen.
         ///
-        /// Range: 0 - 1 with respect to Wiimote camera dimensions.  If \c predict is true this may be outside of that range.
+        /// Range: 0 - 1 with respect to Wii Remote camera dimensions.  If \c predict is true this may be outside of that range.
         public float[,] GetProbableSensorBarIR(bool predict = false)
         {
             int count = 0;

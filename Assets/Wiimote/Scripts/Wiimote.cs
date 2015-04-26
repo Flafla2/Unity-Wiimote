@@ -11,7 +11,7 @@ namespace WiimoteApi {
 public class Wiimote
 {
     /// Represents whether or not to turn on rumble when sending reports to
-    /// the Wiimote.  This will only be applied when a data report is sent.
+    /// the Wii Remote.  This will only be applied when a data report is sent.
     /// That is, simply setting this flag will not instantly enable rumble.
     public bool RumbleOn = false;
 
@@ -36,16 +36,16 @@ public class Wiimote
     private StatusData  _Status;
 
     /// A pointer representing HIDApi's low-level device handle to this
-    /// wiimote.  Use this when interfacing directly with HIDApi.
+    /// Wii Remote.  Use this when interfacing directly with HIDApi.
     public IntPtr hidapi_handle { get { return _hidapi_handle; } }
     private IntPtr _hidapi_handle = IntPtr.Zero;
 
-    /// The low-level bluetooth HID path of this wiimote.  Use this
+    /// The low-level bluetooth HID path of this Wii Remote.  Use this
     /// when interfacing directly with HIDApi.
     public string hidapi_path { get { return _hidapi_path; } }
     private string _hidapi_path;
 
-    /// True if this wiimote is a Wii Remote Plus (Nintendo RVL-CNT-01-TR)
+    /// True if this Wii Remote is a Wii Remote Plus (Nintendo RVL-CNT-01-TR)
     /// Of course, if this is true you can expect a Wii Motion Plus to be
     /// connected.
     public bool wiimoteplus { get { return _wiimoteplus; } }
@@ -56,15 +56,15 @@ public class Wiimote
     private InputDataType last_report_type = InputDataType.REPORT_BUTTONS;
     private bool expecting_status_report = false;
 
-    /// True if a Wii Motion Plus is attached to the Wiimote, and it
+    /// True if a Wii Motion Plus is attached to the Wii Remote, and it
     /// has NOT BEEN ACTIVATED.  When the WMP is activated this value is
     /// false.  This is only updated when the remote is requested from
-    /// Wiimote registers (see: RequestIdentifyWiiMotionPlus())
+    /// Wii Remote registers (see: RequestIdentifyWiiMotionPlus())
     public bool wmp_attached { get { return _wmp_attached; } }
     private bool _wmp_attached = false;
 
-    /// The current extension connected to the Wiimote.  This is only updated
-    /// when the Wiimote reports an extension change (this should update
+    /// The current extension connected to the Wii Remote.  This is only updated
+    /// when the Wii Remote reports an extension change (this should update
     /// automatically).
     public ExtensionController current_ext { get { return _current_ext; } }
     private ExtensionController _current_ext = ExtensionController.NONE;
@@ -162,7 +162,7 @@ public class Wiimote
 
     /// \brief Performs a series of coperations to initialize the IR camera.
     /// \param type The IR Report type you want to use.
-    /// \return If all IR setup commands were successfully sent to the Wiimote.
+    /// \return If all IR setup commands were successfully sent to the Wii Remote.
     /// 
     /// This performs the following steps in order to set up the IR camera:
     /// 1. Enable IR Camera (Send \c 0x04 to Output Report \c 0x13)
@@ -172,7 +172,7 @@ public class Wiimote
     /// 5. Write Sensitivity Block 2 to registers at \c 0xb0001a
     /// 6. Write Mode Number to register \c 0xb00033
     /// 7. Write 0x08 to register \c 0xb00030 (again)
-    /// 8. Update the Wiimote's data reporting mode based on \c type
+    /// 8. Update the Wii Remote's data reporting mode based on \c type
     public bool SetupIRCamera(IRDataType type = IRDataType.EXTENDED)
     {
         int res;
@@ -226,10 +226,10 @@ public class Wiimote
 
     /// \brief Attempts to identify whether or not a Wii Motion Plus is connected, but NOT activated.
     /// \sa RequestIdentifyExtension(), ActivateWiiMotionPlus()
-    /// \return If the Identification request was successfully sent to the Wiimote.
+    /// \return If the Identification request was successfully sent to the Wii Remote.
     ///
-    /// When the Wiimote reports back if a Wii Motion Plus is connected, wmp_attached will be updated.
-    /// \note If the Wii Motion Plus is activated (using ActivateWiiMotionPlus()) the Wiimote will report false
+    /// When the Wii Remote reports back if a Wii Motion Plus is connected, wmp_attached will be updated.
+    /// \note If the Wii Motion Plus is activated (using ActivateWiiMotionPlus()) the Wii Remote will report false
     public bool RequestIdentifyWiiMotionPlus()
     {
         int res;
@@ -237,12 +237,12 @@ public class Wiimote
         return res > 0;
     }
 
-    /// \brief Attempts to identify what (if any) ACTIVE extension is currently connected to the Wiimote.
+    /// \brief Attempts to identify what (if any) ACTIVE extension is currently connected to the Wii Remote.
     /// \sa RequestIdentifyWiiMotionPlus(), ActivateExtension()
-    /// \return If the identification request was successfully sent to the Wiimote.
+    /// \return If the identification request was successfully sent to the Wii Remote.
     ///
-    /// When the Wiimote reports back what extension is connected, current_ext will be updated.
-    /// \note If the Extension has not been activated yet (using ActivateExtension) the Wiimote will report ExtensionController::NONE.
+    /// When the Wii Remote reports back what extension is connected, current_ext will be updated.
+    /// \note If the Extension has not been activated yet (using ActivateExtension) the Wii Remote will report ExtensionController::NONE.
     public bool RequestIdentifyExtension()
     {
         int res = SendRegisterReadRequest(RegisterType.CONTROL, 0xA400FA, 6, RespondIdentifyExtension);
@@ -251,10 +251,10 @@ public class Wiimote
 
     /// \brief Attempts to activate the Wii Motion Plus.
     /// \sa RequestIdentifyWiiMotionPlus(), wmp_attached
-    /// \return If the activation request was successfully sent to the Wiimote.
+    /// \return If the activation request was successfully sent to the Wii Remote.
     ///
-    /// When the Wiimote reports that the Wii Motion Plus has been activated, current_ext will be updated to ExtensionController::MOTIONPLUS
-    /// If there is no Wii Motion Plus connected, undefined behavior may occur on the Wiimote.
+    /// When the Wii Remote reports that the Wii Motion Plus has been activated, current_ext will be updated to ExtensionController::MOTIONPLUS
+    /// If there is no Wii Motion Plus connected, undefined behavior may occur on the Wii Remote.
     public bool ActivateWiiMotionPlus()
     {
         if (!wmp_attached)
@@ -278,9 +278,9 @@ public class Wiimote
 
     /// \brief Attempts to activate any connected extension controller
     /// \sa RequestIdentifyExtension(), StatusData::ext_connected
-    /// \return If the activation request was successfully sent to the Wiimote.
+    /// \return If the activation request was successfully sent to the Wii Remote.
     ///
-    /// If there is no extension connected, undefined behavior may occur on the Wiimote.
+    /// If there is no extension connected, undefined behavior may occur on the Wii Remote.
     public bool ActivateExtension()
     {
         if (!Status.ext_connected)
@@ -299,15 +299,15 @@ public class Wiimote
     #endregion
 
     #region Write
-    /// \brief Sends a generic block of data to the Wiimote using the specified Output Report.
+    /// \brief Sends a generic block of data to the Wii Remote using the specified Output Report.
     /// \param type The output report type you would like to send
     /// \param data The raw data you would like to send using the specified \c type.
     /// \return On success, the total size of the data written, -1 if HIDApi reports an error, or < -1 if there is an invalid input.
     /// 
-    /// This should only be used to send custom data to the Wiimote that is currently unimplemented by WiimoteApi.
+    /// This should only be used to send custom data to the Wii Remote that is currently unimplemented by WiimoteApi.
     /// In any average use case you can use any of the higher-level output functions provided by WiimoteApi.
     ///
-    /// The Wiimote rumble settings are also updated based on RumbleOn.
+    /// The Wii Remote rumble settings are also updated based on RumbleOn.
     public int SendWithType(OutputDataType type, byte[] data)
     {
         byte[] final = new byte[data.Length + 1];
@@ -327,7 +327,7 @@ public class Wiimote
         return res;
     }
 
-    /// \brief Updates the Player LEDs on the bottom of the Wiimote
+    /// \brief Updates the Player LEDs on the bottom of the Wii Remote
     /// \param led1,led2,led3,led4 If this LED should be turned on
     /// \return On success, the total size of the data written (> 0), <= 0 on failure.
     /// \sa SendWithType(OutputDataType, byte[])
@@ -346,7 +346,7 @@ public class Wiimote
         return SendWithType(OutputDataType.LED, new byte[] { mask });
     }
 
-    /// \brief Sets the Data Reporting mode of the Wiimote.
+    /// \brief Sets the Data Reporting mode of the Wii Remote.
     /// \param mode The data reporting mode desired.  This can be any InputDataType except for
     ///         InputDataType::STATUS_INFO, InputDataType::READ_MEMORY_REGISTERS, or InputDataType::ACKNOWLEDGE_OUTPUT_REPORT.
     ///         Said data types are not data reporting modes so it doesn't make sense to use them here.
@@ -392,30 +392,30 @@ public class Wiimote
         return SendWithType(OutputDataType.SPEAKER_MUTE, mask);
     }
 
-    /// \brief Request a Wiimote Status update.
+    /// \brief Request a Wii Remote Status update.
     /// \return On success > 0, <= 0 on failure.
     /// \sa Status, StatusData
     ///
-    /// This will update the data in Status when the Wiimote reports back.
+    /// This will update the data in Status when the Wii Remote reports back.
     public int SendStatusInfoRequest()
     {
         expecting_status_report = true;
         return SendWithType(OutputDataType.STATUS_INFO_REQUEST, new byte[] { 0x00 });
     }
 
-    /// \brief Requests the Wiimote to report data from its internal registers.
+    /// \brief Requests the Wii Remote to report data from its internal registers.
     /// \param type The type of register you would like to read from
     /// \param offset The starting offset of the block of data you would like to read
     /// \param size The size of the block of data you would like to read
-    /// \param Responder This will be called when the Wiimote finishes reporting the requested data.
+    /// \param Responder This will be called when the Wii Remote finishes reporting the requested data.
     /// \return On success, > 0, <= 0 on failure.
     /// \sa SendRegisterWriteRequest(RegisterType, int, byte[])
     ///
     /// \warning Do not attempt to read from the registers when another read is pending (that is, data is being
-    ///          recieved by the Wiimote).  If you attempt to do this, the new read request will be ignored.
+    ///          recieved by the Wii Remote).  If you attempt to do this, the new read request will be ignored.
     /// 
-    /// Reading from the Wiimote's internal registers can give important data not available through normal output reports.
-    /// This can, for example, be used to read saved Mii data from the Wiimote's EEPROM registers.  It is also used by some
+    /// Reading from the Wii Remote's internal registers can give important data not available through normal output reports.
+    /// This can, for example, be used to read saved Mii data from the Wii Remote's EEPROM registers.  It is also used by some
     /// of WiimoteApi's setup functions (RequestIdentifyExtension() for example).
     /// 
     /// If you use this incorrectly (for example, if you attempt to read from an invalid block of data), \c Responder will not be called.
@@ -440,18 +440,18 @@ public class Wiimote
         return SendWithType(OutputDataType.READ_MEMORY_REGISTERS, total);
     }
 
-    /// \brief Attempts to write a block of data to the Wiimote's internal registers.
+    /// \brief Attempts to write a block of data to the Wii Remote's internal registers.
     /// \param type The type of register you would like to write to
     /// \param offset The starting offset of the block of data you would like to write
     /// \param data Data to write to registers at \c offset.  This must have a maximum length of 16.
     /// \return On success, > 0, <= 0 on failure.
     /// \warning If data.Length > 16 the write request will be ignored.
     /// 
-    /// Writing to the Wiimote's internal registers allows you to access advanced functions of the Wiimote, such as
+    /// Writing to the Wii Remote's internal registers allows you to access advanced functions of the remote, such as
     /// the speakers or the IR camera.  It is used by some of WiimoteApi's setup functions (SetupIRCamera()
     /// for example).
     /// 
-    /// If you use this incorrectly (for example, if you attempt to write to a read-only register) the Wiimote handles this gracefully
+    /// If you use this incorrectly (for example, if you attempt to write to a read-only register) the Wii Remote handles this gracefully
     /// and nothing happens.
     public int SendRegisterWriteRequest(RegisterType type, int offset, byte[] data)
     {
@@ -472,17 +472,17 @@ public class Wiimote
     #endregion
 
     #region Read
-    /// \brief Reads and interprets data reported by the Wiimote.
+    /// \brief Reads and interprets data reported by the Wii Remote.
     /// \return On success, > 0, < 0 on failure, 0 if nothing has been recieved.
     /// 
-    /// Wiimote reads function similarly to a Queue, in FIFO (first in, first out) order.
+    /// Wii Remote reads function similarly to a Queue, in FIFO (first in, first out) order.
     /// For example, if two reports were sent since the last \c ReadWiimoteData() call,
     /// this call will only read and interpret the first of those two (and "pop" it off
     /// of the queue).  So, in order to make sure you don't fall behind the Wiimote's update
     /// frequency, you can do something like this (in a game loop for example):
     ///
     /// \code
-    /// Wiimote wiimote;
+    /// Wii Remote wiimote;
     /// int ret;
     /// do
     /// {
@@ -535,7 +535,7 @@ public class Wiimote
 
                 if (Status.ext_connected != old_ext_connected)
                 {
-                    if (Status.ext_connected)                // The wiimote doesn't allow reading from the extension identifier
+                    if (Status.ext_connected)                // The Wii Remote doesn't allow reading from the extension identifier
                     {                                               // when nothing is connected.
                         ActivateExtension();
                         RequestIdentifyExtension();         // Identify what extension was connected.
@@ -564,11 +564,11 @@ public class Wiimote
                     CurrentReadData = null;
                     return status;
                 }
-                // lowOffset is reversed because the wiimote reports are in Big Endian order
+                // lowOffset is reversed because the Wii Remote reports are in Big Endian order
                 ushort lowOffset = BitConverter.ToUInt16(new byte[] { data[4], data[3] }, 0);
                 ushort expected = (ushort)CurrentReadData.ExpectedOffset;
                 if (expected != lowOffset)
-                    Debug.LogWarning("Expected Register Read Offset (" + expected + ") does not match reported offset from Wiimote (" + lowOffset + ")");
+                    Debug.LogWarning("Expected Register Read Offset (" + expected + ") does not match reported offset from Wii Remote (" + lowOffset + ")");
                 byte[] read = new byte[size];
                 for (int x = 0; x < size; x++)
                     read[x] = data[x + 5];
@@ -695,7 +695,7 @@ public class Wiimote
         return status;
     }
 
-    /// The size, in bytes, of a given Wiimote InputDataType when reported by the Wiimote.
+    /// The size, in bytes, of a given Wii Remote InputDataType when reported by the Wiimote.
     ///
     /// This is at most 21 bytes.
     public int GetInputDataTypeSize(InputDataType type)
