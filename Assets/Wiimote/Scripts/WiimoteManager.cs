@@ -17,7 +17,7 @@ public class WiimoteManager
     public static List<Wiimote> Wiimotes { get { return _Wiimotes; } }
     public static List<Wiimote> _Wiimotes = new List<Wiimote>();
 
-    /// If true, ::WiimoteManager and ::Wiimote will write data reports and other debug
+    /// If true, WiimoteManager and Wiimote will write data reports and other debug
     /// messages to the console.  Any incorrect usages / errors will still be reported.
     public static bool Debug_Messages = false;
 
@@ -95,7 +95,7 @@ public class WiimoteManager
         return found;
     }
 
-    /// \brief Disables the given \c Wiimote by closing its bluetooth HID connection.  Also removes the remote from ::Wiimotes
+    /// \brief Disables the given \c Wiimote by closing its bluetooth HID connection.  Also removes the remote from Wiimotes
     /// \param remote The remote to cleanup
     public static void Cleanup(Wiimote remote)
     {
@@ -105,7 +105,7 @@ public class WiimoteManager
         Wiimotes.Remove(remote);
     }
 
-    /// \return If any Wiimotes are connected and found by ::FindWiimote
+    /// \return If any Wiimotes are connected and found by FindWiimote
     public static bool HasWiimote()
     {
         return !(Wiimotes.Count <= 0 || Wiimotes[0] == null || Wiimotes[0].hidapi_handle == IntPtr.Zero);
@@ -114,9 +114,9 @@ public class WiimoteManager
     /// \brief Sends RAW DATA to the given bluetooth HID device.  This is essentially a wrapper around HIDApi.
     /// \param hidapi_wiimote The HIDApi device handle to write to.
     /// \param data The data to write.
-    /// \sa ::Wiimote::SendWithType(OutputDataType, byte[])
+    /// \sa Wiimote::SendWithType(OutputDataType, byte[])
     /// \warning DO NOT use this unless you absolutely need to bypass the given Wiimote communication functions.
-    ///          Use the functionality provided by ::Wiimote instead.
+    ///          Use the functionality provided by Wiimote instead.
     public static int SendRaw(IntPtr hidapi_wiimote, byte[] data)
     {
         if (hidapi_wiimote == IntPtr.Zero) return -2;
@@ -159,9 +159,9 @@ public class WiimoteManager
     /// \brief Attempts to recieve RAW DATA to the given bluetooth HID device.  This is essentially a wrapper around HIDApi.
     /// \param hidapi_wiimote The HIDApi device handle to write to.
     /// \param data The data to write.
-    /// \sa ::Wiimote::ReadWiimoteData()
+    /// \sa Wiimote::ReadWiimoteData()
     /// \warning DO NOT use this unless you absolutely need to bypass the given Wiimote communication functions.
-    ///          Use the functionality provided by ::Wiimote instead.
+    ///          Use the functionality provided by Wiimote instead.
     public static int RecieveRaw(IntPtr hidapi_wiimote, byte[] buf)
     {
         if (hidapi_wiimote == IntPtr.Zero) return -2;

@@ -15,7 +15,7 @@ namespace WiimoteApi
         /// \brief Interprets raw byte data reported by the Wiimote.  The indeces of the actual bytes
         ///        passed to this depends on the Wiimote's current data report mode and the type
         ///        of data being passed.
-        /// \sa ::Wiimote::ReadWiimoteData()
+        /// \sa Wiimote::ReadWiimoteData()
         public abstract bool InterpretData(byte[] data);
         
     }

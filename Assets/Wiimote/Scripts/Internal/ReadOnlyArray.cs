@@ -1,7 +1,7 @@
 ﻿namespace WiimoteApi.Util
 {
     /// A simple, immutable, read only array.  This is used for basic
-    /// data encapsulation in many of the ::WiimoteData subclasses.
+    /// data encapsulation in many of the WiimoteData subclasses.
     public class ReadOnlyArray<T>
     {
         private T[] _data;
@@ -21,7 +21,7 @@
     }
 
     /// A simple, immutable, read only matrix (2-D array).  This is used for basic
-    /// data encapsulation in many of the ::WiimoteData subclasses.
+    /// data encapsulation in many of the WiimoteData subclasses.
     public class ReadOnlyMatrix<T>
     {
         private T[,] _data;
