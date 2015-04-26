@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System;
 using System.Threading;
 using System.Runtime.InteropServices;
+using WiimoteApi.Internal;
 
 namespace WiimoteApi { 
 
@@ -57,14 +58,13 @@ public class WiimoteManager
             }
             if (remote == null)
             {
-                remote = new Wiimote();
-                remote.hidapi_path = enumerate.path;
-                
-                if(Debug_Messages)
-                    Debug.Log("Found New Remote: "+remote.hidapi_path);
+                IntPtr handle = HIDapi.hid_open_path(remote.hidapi_path);
+                if (Debug_Messages)
+                    Debug.Log("Found New Remote: " + remote.hidapi_path);
 
-                remote.hidapi_handle = HIDapi.hid_open_path(remote.hidapi_path);
+                remote = new Wiimote(handle, enumerate.path);
                 remote.wiimoteplus = wiimoteplus;
+
                 Wiimotes.Add(remote);
 
                 SendDataReportMode(remote, InputDataType.REPORT_BUTTONS);
@@ -234,7 +234,7 @@ public class WiimoteManager
 
     public static bool ActivateExtension(Wiimote remote)
     {
-        if (!remote.ext_connected)
+        if (!remote.Status.ext_connected)
             Debug.LogWarning("There is a request to activate an Extension controller even though it has not been confirmed to exist!  Trying anyway.");
 
         // 1. Initialize the Extension by writing 0x55 to register 0xA400F0
@@ -393,12 +393,13 @@ public class WiimoteManager
                 byte flags = data[2];
                 byte battery_level = data[5];
 
-                InterpretButtonData(remote, buttons);
-                remote.battery_level = battery_level;
+                remote.Button.InterpretData(buttons);
+                remote.Status.battery_level = battery_level;
 
-                bool old_ext_connected = remote.ext_connected;
+                bool old_ext_connected = remote.Status.ext_connected;
 
-                // TODO: Status data
+                byte[] total = new byte[] { flags, battery_level };
+                remote.Status.InterpretData(total);
 
                 if (expecting_status_report)
                 {
@@ -410,9 +411,9 @@ public class WiimoteManager
                     SendDataReportMode(remote, last_report_type);   // If we don't update the data report mode, no updates will be sent
                 }
 
-                if (remote.ext_connected != old_ext_connected)
+                if (remote.Status.ext_connected != old_ext_connected)
                 {
-                    if (remote.ext_connected)                    // The wiimote doesn't allow reading from the extension identifier
+                    if (remote.Status.ext_connected)                // The wiimote doesn't allow reading from the extension identifier
                     {                                               // when nothing is connected.
                         ActivateExtension(remote);
                         RequestIdentifyExtension(remote);         // Identify what extension was connected.
@@ -424,7 +425,7 @@ public class WiimoteManager
                 break;
             case InputDataType.READ_MEMORY_REGISTERS: // done.
                 buttons = new byte[] { data[0], data[1] };
-                InterpretButtonData(remote, buttons);
+                remote.Button.InterpretData(buttons);
 
                 if (remote.CurrentReadData == null)
                 {
@@ -456,23 +457,23 @@ public class WiimoteManager
                 break;
             case InputDataType.ACKNOWLEDGE_OUTPUT_REPORT:
                 buttons = new byte[] { data[0], data[1] };
-                InterpretButtonData(remote, buttons);
+                remote.Button.InterpretData(buttons);
                 // TODO: doesn't do any actual error handling, or do any special code about acknowledging the output report.
                 break;
             case InputDataType.REPORT_BUTTONS: // done.
                 buttons = new byte[] { data[0], data[1] };
-                InterpretButtonData(remote, buttons);
+                remote.Button.InterpretData(buttons);
                 break;
             case InputDataType.REPORT_BUTTONS_ACCEL: // done.
                 buttons = new byte[] { data[0], data[1] };
-                InterpretButtonData(remote, buttons);
+                remote.Button.InterpretData(buttons);
 
-                accel = new byte[] { data[2], data[3], data[4] };
-                InterpretAccelData(remote, buttons, accel);
+                accel = new byte[] { data[0], data[1], data[2], data[3], data[4] };
+                remote.Accel.InterpretData(accel);
                 break;
             case InputDataType.REPORT_BUTTONS_EXT8: // done.
                 buttons = new byte[] { data[0], data[1] };
-                InterpretButtonData(remote, buttons);
+                remote.Button.InterpretData(buttons);
 
                 ext = new byte[8];
                 for (int x = 0; x < ext.Length; x++)
@@ -482,19 +483,19 @@ public class WiimoteManager
                 break;
             case InputDataType.REPORT_BUTTONS_ACCEL_IR12: // done.
                 buttons = new byte[] { data[0], data[1] };
-                InterpretButtonData(remote, buttons);
+                remote.Button.InterpretData(buttons);
 
-                accel = new byte[] { data[2], data[3], data[4] };
-                InterpretAccelData(remote, buttons, accel);
+                accel = new byte[] { data[0], data[1], data[2], data[3], data[4] };
+                remote.Accel.InterpretData(accel);
 
                 ir = new byte[12];
                 for (int x = 0; x < 12; x++)
                     ir[x] = data[x + 5];
-                InterpretIRData12(remote, ir);
+                remote.Ir.InterpretData(ir);
                 break;
             case InputDataType.REPORT_BUTTONS_EXT19: // done.
                 buttons = new byte[] { data[0], data[1] };
-                InterpretButtonData(remote, buttons);
+                remote.Button.InterpretData(buttons);
 
                 ext = new byte[19];
                 for (int x = 0; x < ext.Length; x++)
@@ -503,10 +504,10 @@ public class WiimoteManager
                 break;
             case InputDataType.REPORT_BUTTONS_ACCEL_EXT16: // done.
                 buttons = new byte[] { data[0], data[1] };
-                InterpretButtonData(remote, buttons);
+                remote.Button.InterpretData(buttons);
 
-                accel = new byte[] { data[2], data[3], data[4] };
-                InterpretAccelData(remote, buttons, accel);
+                accel = new byte[] { data[0], data[1], data[2], data[3], data[4] };
+                remote.Accel.InterpretData(accel);
 
                 ext = new byte[16];
                 for (int x = 0; x < ext.Length; x++)
@@ -515,12 +516,12 @@ public class WiimoteManager
                 break;
             case InputDataType.REPORT_BUTTONS_IR10_EXT9: // done.
                 buttons = new byte[] { data[0], data[1] };
-                InterpretButtonData(remote, buttons);
+                remote.Button.InterpretData(buttons);
 
                 ir = new byte[10];
                 for (int x = 0; x < 10; x++)
                     ir[x] = data[x + 2];
-                InterpretIRData10(remote, ir);
+                remote.Ir.InterpretData(ir);
 
                 ext = new byte[9];
                 for (int x = 0; x < 9; x++)
@@ -529,15 +530,15 @@ public class WiimoteManager
                 break;
             case InputDataType.REPORT_BUTTONS_ACCEL_IR10_EXT6: // done.
                 buttons = new byte[] { data[0], data[1] };
-                InterpretButtonData(remote, buttons);
+                remote.Button.InterpretData(buttons);
 
-                accel = new byte[] { data[2], data[3], data[4] };
-                InterpretAccelData(remote, buttons, accel);
+                accel = new byte[] { data[0], data[1], data[2], data[3], data[4] };
+                remote.Accel.InterpretData(accel);
 
                 ir = new byte[10];
                 for (int x = 0; x < 10; x++)
                     ir[x] = data[x + 5];
-                InterpretIRData10(remote, ir);
+                remote.Ir.InterpretData(ir);
 
                 ext = new byte[6];
                 for (int x = 0; x < 6; x++)
