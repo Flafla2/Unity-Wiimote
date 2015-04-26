@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using WiimoteApi.Internal;
+using WiimoteApi.Util;
 
 namespace WiimoteApi {
 
@@ -51,14 +52,18 @@ public class Wiimote
     
     // Raw data for any extension controllers connected to the wiimote
     // This is only updated if the Wiimote has a report mode with Extensions.
-    public byte[] extension;
+    public ReadOnlyArray<byte> extension { get { return _extension_readonly; } }
+    private ReadOnlyArray<byte> _extension_readonly;
+    private byte[] _extension { set { _extension_readonly = new ReadOnlyArray<byte>(value); } }
 
     // True if a Wii Motion Plus is attached to the Wiimote, and it
     // has NOT BEEN ACTIVATED.  When the WMP is activated this value is
     // false.  This is only updated when the remote is requested from
     // Wiimote registers (see: RequestIdentifyWiiMotionPlus())
-    public bool wmp_attached = false;
-    public ExtensionController current_ext = ExtensionController.NONE;
+    public bool wmp_attached { get { return _wmp_attached; } }
+    private bool _wmp_attached = false;
+    public ExtensionController current_ext { get { return _current_ext; } }
+    private ExtensionController _current_ext = ExtensionController.NONE;
 
     public static byte[] ID_InactiveMotionPlus = new byte[] {0x00, 0x00, 0xA6, 0x20, 0x00, 0x05};
 
@@ -66,18 +71,18 @@ public class Wiimote
     {
         if (data.Length != ID_InactiveMotionPlus.Length)
         {
-            wmp_attached = false;
+            _wmp_attached = false;
             return;
         }
         for (int x = 0; x < data.Length; x++)
         {
             if (data[x] != ID_InactiveMotionPlus[x])
             {
-                wmp_attached = false;
+                _wmp_attached = false;
                 return;
             }
         }
-        wmp_attached = true;
+        _wmp_attached = true;
     }
 
     public const long ID_ActiveMotionPlus           = 0x0000A4200405;
@@ -98,19 +103,19 @@ public class Wiimote
         long val = BitConverter.ToInt64(resized, 0);
 
         if (val == ID_ActiveMotionPlus)
-            current_ext = ExtensionController.MOTIONPLUS;
+            _current_ext = ExtensionController.MOTIONPLUS;
         else if (val == ID_ActiveMotionPlus_Nunchuck)
-            current_ext = ExtensionController.MOTIONPLUS_NUNCHUCK;
+            _current_ext = ExtensionController.MOTIONPLUS_NUNCHUCK;
         else if (val == ID_ActiveMotionPlus_Classic)
-            current_ext = ExtensionController.MOTIONPLUS_CLASSIC;
+            _current_ext = ExtensionController.MOTIONPLUS_CLASSIC;
         else if (val == ID_ClassicPro)
-            current_ext = ExtensionController.CLASSIC_PRO;
+            _current_ext = ExtensionController.CLASSIC_PRO;
         else if (val == ID_Nunchuck)
-            current_ext = ExtensionController.NUNCHUCK;
+            _current_ext = ExtensionController.NUNCHUCK;
         else if (val == ID_Classic)
-            current_ext = ExtensionController.CLASSIC;
+            _current_ext = ExtensionController.CLASSIC;
         else
-            current_ext = ExtensionController.NONE;
+            _current_ext = ExtensionController.NONE;
     }
 
     #region Setups
@@ -387,7 +392,7 @@ public class Wiimote
                     }
                     else
                     {
-                        current_ext = ExtensionController.NONE;
+                        _current_ext = ExtensionController.NONE;
                     }
                 }
                 break;
@@ -447,7 +452,7 @@ public class Wiimote
                 for (int x = 0; x < ext.Length; x++)
                     ext[x] = data[x + 2];
 
-                extension = ext;
+                _extension = ext;
                 break;
             case InputDataType.REPORT_BUTTONS_ACCEL_IR12: // done.
                 buttons = new byte[] { data[0], data[1] };
@@ -468,7 +473,7 @@ public class Wiimote
                 ext = new byte[19];
                 for (int x = 0; x < ext.Length; x++)
                     ext[x] = data[x + 2];
-                extension = ext;
+                _extension = ext;
                 break;
             case InputDataType.REPORT_BUTTONS_ACCEL_EXT16: // done.
                 buttons = new byte[] { data[0], data[1] };
@@ -480,7 +485,7 @@ public class Wiimote
                 ext = new byte[16];
                 for (int x = 0; x < ext.Length; x++)
                     ext[x] = data[x + 5];
-                extension = ext;
+                _extension = ext;
                 break;
             case InputDataType.REPORT_BUTTONS_IR10_EXT9: // done.
                 buttons = new byte[] { data[0], data[1] };
@@ -494,7 +499,7 @@ public class Wiimote
                 ext = new byte[9];
                 for (int x = 0; x < 9; x++)
                     ext[x] = data[x + 12];
-                extension = ext;
+                _extension = ext;
                 break;
             case InputDataType.REPORT_BUTTONS_ACCEL_IR10_EXT6: // done.
                 buttons = new byte[] { data[0], data[1] };
@@ -511,13 +516,13 @@ public class Wiimote
                 ext = new byte[6];
                 for (int x = 0; x < 6; x++)
                     ext[x] = data[x + 15];
-                extension = ext;
+                _extension = ext;
                 break;
             case InputDataType.REPORT_EXT21: // done.
                 ext = new byte[21];
                 for (int x = 0; x < ext.Length; x++)
                     ext[x] = data[x];
-                extension = ext;
+                _extension = ext;
                 break;
             case InputDataType.REPORT_INTERLEAVED:
                 // TODO
