@@ -3,22 +3,24 @@ using WiimoteApi.Util;
 namespace WiimoteApi {
     public class NunchuckData : WiimoteData
     {
-        // Nunchuck Acceleration values.  These are in the same (RAW) format
-        // as Wiimote.accel[].
+        /// Nunchuck accelerometer values.  These are in the same (RAW) format
+        /// as ::Wiimote::accel.
         public ReadOnlyArray<int> accel { get { return _accel_readonly; } }
         private ReadOnlyArray<int> _accel_readonly;
         private int[] _accel;
-        // Nunchuck Analog Stick values.  This is a size 2 Array [X, Y] of
-        // RAW (unprocessed) stick data.  Generally the analog stick returns
-        // values in the range 35-228 for X and 27-220 for Y.  The center for
-        // both is around 128.
+
+        /// Nunchuck Analog Stick values.  This is a size 2 Array [X, Y] of
+        /// RAW (unprocessed) stick data.  Generally the analog stick returns
+        /// values in the range 35-228 for X and 27-220 for Y.  The center for
+        /// both is around 128.
         public ReadOnlyArray<byte> stick { get { return _stick_readonly; } }
         private ReadOnlyArray<byte> _stick_readonly;
         private byte[] _stick;
-        // If the C button has been pressed
+
+        /// Button: C
         public bool c { get { return _c; } }
         private bool _c;
-        // If the Z button has been pressed
+        /// Button: Z
         public bool z { get { return _z; } }
         private bool _z;
 
@@ -53,6 +55,8 @@ namespace WiimoteApi {
             return true;
         }
 
+        /// Returns a size 2 [X, Y] array of the analog stick's position, in the range
+        /// 0 - 1.  This takes into account typical Nunchuck data ranges and zero points.
         public float[] GetStick01() {
             float[] ret = new float[2];
             ret[0] = _stick[0];

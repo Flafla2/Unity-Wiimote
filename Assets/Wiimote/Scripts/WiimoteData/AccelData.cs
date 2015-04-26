@@ -5,28 +5,32 @@ namespace WiimoteApi
 {
     public class AccelData : WiimoteData
     {
-        // Current wiimote-space accelration, in wiimote coordinate system.
-        // These are RAW values, so they may be off.  See CalibrateAccel().
-        // This is only updated if the Wiimote has a report mode with Accel
-        // Range:            -128 to 128
-        // Up/Down:          +Z/-Z
-        // Left/Right:       +X/-Z
-        // Forward/Backward: -Y/+Y
+        /// \brief Current wiimote-space acceleration, in wiimote coordinate system.
+        ///        These are RAW values, so they may be off.  See CalibrateAccel().
+        ///        This is only updated if the Wiimote has a report mode that supports
+        ///        the Accelerometer.
+        ///
+        /// Range:            -128 to 128
+        /// Up/Down:          +Z/-Z
+        /// Left/Right:       +X/-Z
+        /// Forward/Backward: -Y/+Y
         public ReadOnlyArray<int> accel { get { return _accel_readonly; } }
         private ReadOnlyArray<int> _accel_readonly;
         private int[] _accel;
         
-        // Calibration data for the accelerometer.  This is not reported
-        // by the wiimote directly - it is instead collected from normal
-        // Wiimote accelerometer data.  Here are the 3 calibration steps:
-        //
-        // 1. Horizontal with the A button facing up
-        // 2. IR sensor down on the table so the expansion port is facing up
-        // 3. Laying on its side, so the left side is facing up
-        // 
-        // By default it is set to experimental calibration data.
-        // 
-        // int[calibration step,calibration data] (size 3x3)
+        /// \brief Size: 3x3. Calibration data for the accelerometer. This is not reported
+        ///        by the wiimote directly - it is instead collected from normal
+        ///        Wiimote accelerometer data.
+        /// \sa ::AccelCalibrationStep, ::CalubrateAccel(AccelCalibrationStep)
+        ///
+        /// Here are the 3 calibration steps:
+        /// 1. Horizontal with the A button facing up
+        /// 2. IR sensor down on the table so the expansion port is facing up
+        /// 3. Laying on its side, so the left side is facing up
+        /// 
+        /// By default this is set to experimental calibration data.
+        /// 
+        /// int[calibration step,calibration data] (size 3x3)
         public int[,] accel_calib = {
                                     { -20, -16,  83 },
                                     { -20,  80, -20 },
@@ -54,6 +58,10 @@ namespace WiimoteApi
             return true;
         }
 
+        /// \brief Use current accelerometer values to update calibration data.  Use this when
+        ///        the user reports that the Wiimote is in a calibration position.
+        /// \param The calibration step to perform.
+        /// \sa ::accel_calib, ::AccelCalibrationStep
         public void CalibrateAccel(AccelCalibrationStep step)
         {
             for (int x = 0; x < 3; x++)
@@ -69,13 +77,14 @@ namespace WiimoteApi
             return ret;
         }
 
-        // Calibrated Accelerometer Data using experimental calibration points.
-        // These values are in Wiimote coordinates (in the direction of gravity)
-        // Range: -1 to 1
-        // Up/Down:          +Z/-Z
-        // Left/Right:       +X/-Z
-        // Forward/Backward: -Y/+Y
-        // See Also: CalibrateAccel(), GetAccelZeroPoints(), accel[]
+        /// \brief Calibrated Accelerometer Data using experimental calibration points.
+        ///        These values are in Wiimote coordinates (in the direction of gravity)
+        /// \sa ::CalibrateAccel(), ::GetAccelZeroPoints(), ::accel, ::accel_calib
+        ///
+        /// Range: -1 to 1
+        /// Up/Down:          +Z/-Z
+        /// Left/Right:       +X/-Z
+        /// Forward/Backward: -Y/+Y
         public float[] GetCalibratedAccelData()
         {
             float[] o = GetAccelZeroPoints();

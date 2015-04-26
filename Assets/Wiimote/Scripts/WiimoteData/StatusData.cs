@@ -5,30 +5,37 @@ namespace WiimoteApi
 {
     public class StatusData : WiimoteData
     {
+        /// Size: 4.  An array of what Player LEDs are on as reported by
+        /// the Wiimote.  This is only updated when the Wiimote sends status reports.
         public ReadOnlyArray<bool> led { get { return _led_readonly; } }
         private ReadOnlyArray<bool> _led_readonly;
         private bool[] _led;
-        // True if the Wiimote's batteries are low, as reported by the Wiimote.
-        // This is only updated when the Wiimote sends status reports.
-        // See also: battery_level
+
+        /// \brief True if the Wiimote's batteries are low, as reported by the Wiimote.
+        ///        This is only updated when the Wiimote sends status reports.
+        /// \sa ::battery_level
         public bool battery_low { get { return _battery_low; } }
         private bool _battery_low;
-        // True if an extension controller is connected, as reported by the Wiimote.
-        // This is only updated when the Wiimote sends status reports.
+
+        /// True if an extension controller is connected, as reported by the Wiimote.
+        /// This is only updated when the Wiimote sends status reports.
         public bool ext_connected { get { return _ext_connected; } }
         private bool _ext_connected;
-        // True if the speaker is currently enabled, as reported by the Wiimote.
-        // This is only updated when the Wiimote sends status reports.
+
+        /// True if the speaker is currently enabled, as reported by the Wiimote.
+        /// This is only updated when the Wiimote sends status reports.
         public bool speaker_enabled { get { return _speaker_enabled; } }
         private bool _speaker_enabled;
-        // True if IR is currently enabled, as reported by the Wiimote.
-        // This is only updated when the Wiimote sends status reports.
+        
+        /// True if IR is currently enabled, as reported by the Wiimote.
+        /// This is only updated when the Wiimote sends status reports.
         public bool ir_enabled { get { return _ir_enabled; } }
         private bool _ir_enabled;
-        // The current battery level, as reported by the Wiimote.
-        // This is only updated when the Wiimote sends status reports.
+
+        /// \brief The current battery level, as reported by the Wiimote.
+        ///        This is only updated when the Wiimote sends status reports.
+        /// \sa ::battery_low
         public byte battery_level { get { return _battery_level; } }
-        // See also: battery_low
         private byte _battery_level;
 
         public StatusData(Wiimote Owner)
