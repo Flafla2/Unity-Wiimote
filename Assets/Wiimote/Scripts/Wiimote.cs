@@ -62,7 +62,7 @@ public class Wiimote
 
     public static byte[] ID_InactiveMotionPlus = new byte[] {0x00, 0x00, 0xA6, 0x20, 0x00, 0x05};
 
-    public void RespondIdentifyWiiMotionPlus(byte[] data)
+    private void RespondIdentifyWiiMotionPlus(byte[] data)
     {
         if (data.Length != ID_InactiveMotionPlus.Length)
         {
@@ -88,7 +88,7 @@ public class Wiimote
     public const long ID_ClassicPro                 = 0x0100A4200101;
 
 
-    public void RespondIdentifyExtension(byte[] data)
+    private void RespondIdentifyExtension(byte[] data)
     {
         if (data.Length != 6)
             return;

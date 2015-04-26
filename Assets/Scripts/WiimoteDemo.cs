@@ -30,24 +30,24 @@ public class WiimoteDemo : MonoBehaviour {
         int ret;
         do
         {
-            ret = WiimoteManager.ReadWiimoteData(wiimote);
+            ret = wiimote.ReadWiimoteData();
         } while (ret > 0);
 
-        model.a.enabled = wiimote.a;
-        model.b.enabled = wiimote.b;
-        model.one.enabled = wiimote.one;
-        model.two.enabled = wiimote.two;
-        model.d_up.enabled = wiimote.d_up;
-        model.d_down.enabled = wiimote.d_down;
-        model.d_left.enabled = wiimote.d_left;
-        model.d_right.enabled = wiimote.d_right;
-        model.plus.enabled = wiimote.plus;
-        model.minus.enabled = wiimote.minus;
-        model.home.enabled = wiimote.home;
+        model.a.enabled = wiimote.Button.a;
+        model.b.enabled = wiimote.Button.b;
+        model.one.enabled = wiimote.Button.one;
+        model.two.enabled = wiimote.Button.two;
+        model.d_up.enabled = wiimote.Button.d_up;
+        model.d_down.enabled = wiimote.Button.d_down;
+        model.d_left.enabled = wiimote.Button.d_left;
+        model.d_right.enabled = wiimote.Button.d_right;
+        model.plus.enabled = wiimote.Button.plus;
+        model.minus.enabled = wiimote.Button.minus;
+        model.home.enabled = wiimote.Button.home;
 
         if (ir_dots.Length < 4) return;
 
-        float[,] ir = wiimote.GetProbableSensorBarIR();
+        float[,] ir = wiimote.Ir.GetProbableSensorBarIR();
         for (int i = 0; i < 2; i++)
         {
             float x = (float)ir[i, 0] / 1023f;
@@ -67,7 +67,7 @@ public class WiimoteDemo : MonoBehaviour {
             ir_dots[i].anchorMax = new Vector2(x, y);
         }
 
-        float[] pointer = wiimote.GetPointingPosition();
+        float[] pointer = wiimote.Ir.GetPointingPosition();
         ir_pointer.anchorMin = new Vector2(pointer[0], pointer[1]);
         ir_pointer.anchorMax = new Vector2(pointer[0], pointer[1]);
 	}
@@ -92,22 +92,22 @@ public class WiimoteDemo : MonoBehaviour {
 
         for (int x = 0; x < 4;x++ )
             if (GUILayout.Button("LED Test "+x))
-                WiimoteManager.SendPlayerLED(wiimote, x == 0, x == 1, x == 2, x == 3);
+                wiimote.SendPlayerLED(x == 0, x == 1, x == 2, x == 3);
 
         if(GUILayout.Button("Set Report: Button/Accel"))
-            WiimoteManager.SendDataReportMode(wiimote, WiimoteManager.InputDataType.REPORT_BUTTONS_ACCEL);
+            wiimote.SendDataReportMode(InputDataType.REPORT_BUTTONS_ACCEL);
 
         if (GUILayout.Button("Request Status Report"))
-            WiimoteManager.SendStatusInfoRequest(wiimote);
+            wiimote.SendStatusInfoRequest();
 
         if(GUILayout.Button("IR Setup Sequence"))
-            WiimoteManager.SetupIRCamera(wiimote, WiimoteManager.IRDataType.BASIC);
+            wiimote.SetupIRCamera(IRDataType.BASIC);
 
         for (int x = 0; x < 3; x++)
         {
             AccelCalibrationStep step = (AccelCalibrationStep)x;
             if (GUILayout.Button("Calibrate Accel: " + step.ToString()))
-                wiimote.CalibrateAccel(step);
+                wiimote.Accel.CalibrateAccel(step);
         }
 
         if (GUILayout.Button("Print Calibration Data"))
@@ -117,17 +117,16 @@ public class WiimoteDemo : MonoBehaviour {
             {
                 for (int y = 0; y < 3; y++)
                 {
-                    str.Append(wiimote.accel_calib[y, x]).Append(" ");
+                    str.Append(wiimote.Accel.accel_calib[y, x]).Append(" ");
                 }
                 str.Append("\n");
             }
             Debug.Log(str.ToString());
         }
 
-        if (wiimote != null && wiimote.extension != null && wiimote.current_ext == ExtensionController.NUNCHUCK)
+        if (wiimote != null && wiimote.Extension != null && wiimote.current_ext == ExtensionController.NUNCHUCK)
         {
-            NunchuckData data = new NunchuckData();
-            data.InterpretExtensionData(wiimote.extension);
+            NunchuckData data = (NunchuckData)wiimote.Extension;
             GUILayout.Label("Nunchuck Stick: " + data.stick[0] + ", " + data.stick[1]);
         }
 
@@ -143,16 +142,16 @@ public class WiimoteDemo : MonoBehaviour {
 
         if (UseCalibratedAccel)
         {
-            float[] accel = wiimote.GetCalibratedAccelData();
+            float[] accel = wiimote.Accel.GetCalibratedAccelData();
             accel_x = -accel[0];
             accel_y =  accel[2];
             accel_z = -accel[1];
         }
         else
         {
-            accel_x = -(float)wiimote.accel[0] / 128f;
-            accel_y =  (float)wiimote.accel[2] / 128f;
-            accel_z = -(float)wiimote.accel[1] / 128f;
+            accel_x = -(float)wiimote.Accel.accel[0] / 128f;
+            accel_y =  (float)wiimote.Accel.accel[2] / 128f;
+            accel_z = -(float)wiimote.Accel.accel[1] / 128f;
         }
 
         Gizmos.color = Color.red;
