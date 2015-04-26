@@ -15,7 +15,7 @@ namespace WiimoteApi
         public ReadOnlyArray<int> accel { get { return _accel_readonly; } }
         private ReadOnlyArray<int> _accel_readonly;
         private int[] _accel;
-
+        
         // Calibration data for the accelerometer.  This is not reported
         // by the wiimote directly - it is instead collected from normal
         // Wiimote accelerometer data.  Here are the 3 calibration steps:
