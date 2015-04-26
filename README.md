@@ -7,23 +7,23 @@ low-level bluetooth communications.  In essence, the API itself is an implementa
 reverse-engineering effort done at [Wiibrew](http://wiibrew.org/wiki/Wiimote).  Here are some notable features of the
 API:
 
-- *Cross Platform*: The API is compatible with Windows (on the Microsoft and BlueSoleil bluetooth stacks), Mac, and
+- **Cross Platform**: The API is compatible with Windows (on the Microsoft and BlueSoleil bluetooth stacks), Mac, and
   Linux (only tested on Windows and Mac).
-- *Fully Featured*: The API is capable of communicating and interpreting almost all useful data from the Wii Remote,
+- **Fully Featured**: The API is capable of communicating and interpreting almost all useful data from the Wii Remote,
   including:
     - Basic Button Data (A, B, +, -, 1, 2, D-Pad, Home buttons)
     - 3-Axis Accelerometer reporting
     - IR Camera Data (including pointing position)
     - Extension Controller Support:
-        - **Nunchuck**: Joystick data, C and Z buttons, Accelerometer data
-        - **Wii Motion Plus**: Change in Pitch / Yaw / Roll.
+        - *Nunchuck*: Joystick data, C and Z buttons, Accelerometer data
+        - *Wii Motion Plus*: Change in Pitch / Yaw / Roll.
         - More extension controllers coming soon!  Raw data also available for custom extension controllers.
     - Controlling the remote's 4 LEDs
     - Status reporting (battery level, player LED state, etc.)
     - More features coming soon!
-- *Fully Documented*: The API comes with an example scene in Unity3D that makes use of all of the API's functions.  The
+- **Fully Documented**: The API comes with an example scene in Unity3D that makes use of all of the API's functions.  The
   API itself is well commented and comes with [Doxygen](http://www.stack.nl/~dimitri/doxygen/) documentation.
-- *Open and Growing*: The API is licensed under the generous MIT license (see LICENSE.txt) so you can easily use it
+- **Open and Growing**: The API is licensed under the generous MIT license (see LICENSE.txt) so you can easily use it
   in your projects.  Source code access lets you debug easer.  Of course, it's also free!
 
 Getting Started
