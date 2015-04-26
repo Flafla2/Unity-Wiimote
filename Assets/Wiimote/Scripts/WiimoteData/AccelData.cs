@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using WiimoteApi.Util;
 
 namespace WiimoteApi
 {
@@ -12,7 +12,9 @@ namespace WiimoteApi
         // Up/Down:          +Z/-Z
         // Left/Right:       +X/-Z
         // Forward/Backward: -Y/+Y
-        public int[] accel;
+        public ReadOnlyArray<int> accel { get { return _accel_readonly; } }
+        private ReadOnlyArray<int> _accel_readonly;
+        private int[] _accel;
 
         // Calibration data for the accelerometer.  This is not reported
         // by the wiimote directly - it is instead collected from normal
@@ -34,7 +36,8 @@ namespace WiimoteApi
         public AccelData(Wiimote Owner)
             : base(Owner)
         {
-            accel = new int[3];
+            _accel = new int[3];
+            _accel_readonly = new ReadOnlyArray<int>(_accel);
         }
 
         public override bool InterpretData(byte[] data)
@@ -43,11 +46,11 @@ namespace WiimoteApi
 
             // Note: data[0 - 1] is the buttons data.  data[2 - 4] is the accel data.
             // Accel data and buttons data is interleaved to reduce packet size.
-            accel[0] = ((int)data[2] << 2) | ((data[0] >> 5) & 0xff);
-            accel[1] = ((int)data[3] << 2) | ((data[1] >> 4) & 0xf0);
-            accel[2] = ((int)data[4] << 2) | ((data[1] >> 5) & 0xf0);
+            _accel[0] = ((int)data[2] << 2) | ((data[0] >> 5) & 0xff);
+            _accel[1] = ((int)data[3] << 2) | ((data[1] >> 4) & 0xf0);
+            _accel[2] = ((int)data[4] << 2) | ((data[1] >> 5) & 0xf0);
 
-            for (int x = 0; x < 3; x++) accel[x] -= 0x200; // center around zero.
+            for (int x = 0; x < 3; x++) _accel[x] -= 0x200; // center around zero.
             return true;
         }
 

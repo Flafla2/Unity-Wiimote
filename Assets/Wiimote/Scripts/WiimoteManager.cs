@@ -394,7 +394,6 @@ public class WiimoteManager
                 byte battery_level = data[5];
 
                 remote.Button.InterpretData(buttons);
-                remote.Status.battery_level = battery_level;
 
                 bool old_ext_connected = remote.Status.ext_connected;
 

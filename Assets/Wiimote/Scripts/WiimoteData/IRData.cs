@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using WiimoteApi.Util;
 
 namespace WiimoteApi
 {
@@ -15,12 +16,15 @@ namespace WiimoteApi
         // Index: |     0      |      1     |   2    |
         //
         // int[dot index, x (0) / y (1) / size (2)]
-        public int[,] ir;
+        public ReadOnlyMatrix<int> ir { get { return _ir_readonly; } }
+        public ReadOnlyMatrix<int> _ir_readonly;
+        private int[,] _ir;
 
         public IRData(Wiimote Owner)
             : base(Owner)
         {
-            ir = new int[4, 3];
+            _ir = new int[4, 3];
+            _ir_readonly = new ReadOnlyMatrix<int>(_ir);
         }
 
         public override bool InterpretData(byte[] data)
@@ -47,13 +51,13 @@ namespace WiimoteApi
             int[,] subset = InterperetIRData10_Subset(half);
             for (int x = 0; x < 2; x++)
                 for (int y = 0; y < 3; y++)
-                    ir[x, y] = subset[x, y];
+                    _ir[x, y] = subset[x, y];
 
             for (int x = 0; x < 5; x++) half[x] = data[x + 5];
             subset = InterperetIRData10_Subset(half);
             for (int x = 0; x < 2; x++)
                 for (int y = 0; y < 3; y++)
-                    ir[x + 2, y] = subset[x, y];
+                    _ir[x + 2, y] = subset[x, y];
         }
 
         private int[,] InterperetIRData10_Subset(byte[] data)
@@ -94,9 +98,9 @@ namespace WiimoteApi
                 byte[] subset = new byte[] { data[i], data[i + 1], data[i + 2] };
                 int[] calc = InterpretIRData12_Subset(subset);
 
-                ir[x, 0] = calc[0];
-                ir[x, 1] = calc[1];
-                ir[x, 2] = calc[2];
+                _ir[x, 0] = calc[0];
+                _ir[x, 1] = calc[1];
+                _ir[x, 2] = calc[2];
             }
         }
 
@@ -159,11 +163,11 @@ namespace WiimoteApi
             int[] ind = new int[2];
             for (int x = 0; x < 4; x++)
             {
-                if (count > 1 || ir[x, 0] == -1 || ir[x, 1] == -1)
+                if (count > 1 || _ir[x, 0] == -1 || _ir[x, 1] == -1)
                     continue;
 
                 ind[count] = x;
-                if (count == 1 && ir[ind[0], 0] > ir[x, 0])
+                if (count == 1 && _ir[ind[0], 0] > _ir[x, 0])
                 {
                     ind[1] = ind[0];
                     ind[0] = x;
@@ -178,7 +182,7 @@ namespace WiimoteApi
             for (int x = 0; x < count; x++)
             {
                 for (int y = 0; y < 2; y++)
-                    ret[x, y] = ir[ind[x], y];
+                    ret[x, y] = _ir[ind[x], y];
             }
 
             if (count == 1) // one of the dots are outside of the wiimote FOV
