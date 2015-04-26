@@ -77,7 +77,7 @@ public class WiimoteDemo : MonoBehaviour {
         GUILayout.Label("Wiimote Found: " + WiimoteManager.HasWiimote());
         if (GUILayout.Button("Find Wiimote"))
         {
-            bool found = WiimoteManager.FindWiimote(false);
+            bool found = WiimoteManager.FindWiimote();
             if (found)
             {
                 //WiimoteManager.SendRaw(new byte[] { (byte)WiimoteManager.InputDataType.REPORT_BUTTONS_ACCEL_IR12 });

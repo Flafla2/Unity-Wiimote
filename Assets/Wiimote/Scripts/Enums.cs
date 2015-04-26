@@ -1,13 +1,18 @@
 namespace WiimoteApi {
+/// \brief A type of data storage register that can be read from / written to.
+/// \sa ::Wiimote::SendRegisterWriteRequest(RegisterType, int, byte[]), ::Wiimote::SendRegisterReadRequest(RegisterType, int, int, ReadResponder)
 public enum RegisterType
 {
-    EEPROM = 0x00, CONTROL = 0x04
+    /// The Wiimote's 16kB generic EEPROM memory module.  This is used to store calubration data
+    /// as well as Mii block data from the Mii channel.
+    EEPROM = 0x00,
+    /// The Wiimote's control registers, used for managing the Wiimote's peripherals (such as extension
+    /// controllers, the speakers, and the IR camera).
+    CONTROL = 0x04
 }
 
-/// <summary>
 /// A so-called output data type represents all data that can be sent from the host to the wiimote.
 /// This information is used by the remote to change its internal read/write remote.
-/// </summary>
 public enum OutputDataType
 {
     LED = 0x11,
@@ -22,12 +27,9 @@ public enum OutputDataType
     IR_CAMERA_ENABLE_2 = 0x1A
 }
 
-/// <summary>
-/// A so-called input data type represents all data that can be sent from the wiimote to the host.
-/// This information is used by the host as basic controller data from the wiimote.
-/// 
-/// Note that all REPORT_ types represent the actual data types that can be sent from the contoller.
-/// </summary>
+/// \brief A so-called input data type represents all data that can be sent from the wiimote to the host.
+///        This information is used by the host as basic controller data from the wiimote.
+/// \note All REPORT_ types represent the actual data types that can be sent from the contoller.
 public enum InputDataType
 {
     STATUS_INFO = 0x20,
@@ -46,23 +48,25 @@ public enum InputDataType
     REPORT_INTERLEAVED_ALT = 0x3f
 }
 
-/// <summary>
 /// These are the 3 types of IR data accepted by the Wiimote.  They offer more
 /// or less IR data in exchange for space for other data (such as extension
-/// controllers or accelerometer data).  The 3 types are:
-/// 
-/// BASIC:      10 bytes of data.  Contains position data for each dot only.
-///             Works with reports 0x36 and 0x37.
-/// EXTENDED:   12 bytes of data.  Contains position and size data for each dot.
-///             Works with report 0x33 only.
-/// FULL:       36 bytes of data.  Contains position, size, bounding box, and
-///             intensity data for each dot.  Works with interleaved report 
-///             0x3e/0x3f only.
-/// </summary>
+/// controllers or accelerometer data).
+///
+/// For each IR data type you can only use certain ::InputDataType reports in
+/// order to recieve the data.
 public enum IRDataType
 {
+    /// \brief 10 bytes of data.  Contains position data for each dot only.
+    /// 
+    /// Works with reports ::InputDataType::REPORT_BUTTONS_IR10_EXT9 and ::InputDataType::REPORT_BUTTONS_ACCEL_IR10_EXT6.
     BASIC = 1,
+    /// \brief 12 bytes of data.  Contains position and size data for each dot.
+    /// 
+    /// Works with report ::InputDataType::REPORT_BUTTONS_ACCEL_IR12 only.
     EXTENDED = 3,
+    /// \brief 36 bytes of data.  Contains position, size, bounding box, and intensity data for each dot.
+    ///
+    /// Works with interleaved report ::InputDataType::REPORT_INTERLEAVED / ::InputDataType::REPORT_INTERLEAVED_ALT only.
     FULL = 5
 }
 

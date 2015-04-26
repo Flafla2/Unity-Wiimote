@@ -2,37 +2,37 @@
 {
     public class ButtonData : WiimoteData
     {
-        // Button: D-Pad Left
+        /// Button: D-Pad Left
         public bool d_left { get { return _d_left; } }
         private bool _d_left;
-        // Button: D-Pad Right
+        /// Button: D-Pad Right
         public bool d_right { get { return _d_right; } }
         private bool _d_right;
-        // Button: D-Pad Up
+        /// Button: D-Pad Up
         public bool d_up { get { return _d_up; } }
         private bool _d_up;
-        // Button: D-Pad Down
+        /// Button: D-Pad Down
         public bool d_down { get { return _d_down; } }
         private bool _d_down;
-        // Button: A
+        /// Button: A
         public bool a { get { return _a; } }
         private bool _a;
-        // Button: B
+        /// Button: B
         public bool b { get { return _b; } }
         private bool _b;
-        // Button: 1 (one)
+        /// Button: 1 (one)
         public bool one { get { return _one; } }
         private bool _one;
-        // Button: 2 (two)
+        /// Button: 2 (two)
         public bool two { get { return _two; } }
         private bool _two;
-        // Button: + (plus)
+        /// Button: + (plus)
         public bool plus { get { return _plus; } }
         private bool _plus;
-        // Button: - (minus)
+        /// Button: - (minus)
         public bool minus { get { return _minus; } }
         private bool _minus;
-        // Button: Home
+        /// Button: Home
         public bool home { get { return _home; } }
         private bool _home;
 
