@@ -25,7 +25,7 @@ public class WiimoteManager
     /// WiimoteApi from attempting to write faster than most bluetooth drivers can handle.
     ///
     /// If you attempt to write at a rate faster than this, the extra write requests will
-    /// be queued up and written to the Wiimote after the delay is up.
+    /// be queued up and written to the Wii Remote after the delay is up.
     public static int MaxWriteFrequency = 20; // In ms
     private static float LastWriteTime = 0;
     private static Queue<WriteQueueData> WriteQueue;
@@ -105,7 +105,7 @@ public class WiimoteManager
         Wiimotes.Remove(remote);
     }
 
-    /// \return If any Wiimotes are connected and found by FindWiimote
+    /// \return If any Wii Remotes are connected and found by FindWiimote
     public static bool HasWiimote()
     {
         return !(Wiimotes.Count <= 0 || Wiimotes[0] == null || Wiimotes[0].hidapi_handle == IntPtr.Zero);

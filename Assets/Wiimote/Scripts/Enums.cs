@@ -3,15 +3,15 @@ namespace WiimoteApi {
 /// \sa Wiimote::SendRegisterWriteRequest(RegisterType, int, byte[]), Wiimote::SendRegisterReadRequest(RegisterType, int, int, ReadResponder)
 public enum RegisterType
 {
-    /// The Wiimote's 16kB generic EEPROM memory module.  This is used to store calubration data
+    /// The Wii Remote's 16kB generic EEPROM memory module.  This is used to store calubration data
     /// as well as Mii block data from the Mii channel.
     EEPROM = 0x00,
-    /// The Wiimote's control registers, used for managing the Wiimote's peripherals (such as extension
+    /// The Wii Remote's control registers, used for managing the Wii Remote's peripherals (such as extension
     /// controllers, the speakers, and the IR camera).
     CONTROL = 0x04
 }
 
-/// A so-called output data type represents all data that can be sent from the host to the wiimote.
+/// A so-called output data type represents all data that can be sent from the host to the Wii Remote.
 /// This information is used by the remote to change its internal read/write remote.
 public enum OutputDataType
 {
@@ -27,8 +27,8 @@ public enum OutputDataType
     IR_CAMERA_ENABLE_2 = 0x1A
 }
 
-/// \brief A so-called input data type represents all data that can be sent from the wiimote to the host.
-///        This information is used by the host as basic controller data from the wiimote.
+/// \brief A so-called input data type represents all data that can be sent from the Wii Remote to the host.
+///        This information is used by the host as basic controller data from the Wii Remote.
 /// \note All REPORT_ types represent the actual data types that can be sent from the contoller.
 public enum InputDataType
 {
@@ -48,7 +48,7 @@ public enum InputDataType
     REPORT_INTERLEAVED_ALT = 0x3f
 }
 
-/// These are the 3 types of IR data accepted by the Wiimote.  They offer more
+/// These are the 3 types of IR data accepted by the Wii Remote.  They offer more
 /// or less IR data in exchange for space for other data (such as extension
 /// controllers or accelerometer data).
 ///

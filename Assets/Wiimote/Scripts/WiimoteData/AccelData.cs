@@ -5,9 +5,9 @@ namespace WiimoteApi
 {
     public class AccelData : WiimoteData
     {
-        /// \brief Current wiimote-space acceleration, in wiimote coordinate system.
+        /// \brief Current remote-space acceleration, in the Wii Remote's coordinate system.
         ///        These are RAW values, so they may be off.  See CalibrateAccel().
-        ///        This is only updated if the Wiimote has a report mode that supports
+        ///        This is only updated if the Wii Remote has a report mode that supports
         ///        the Accelerometer.
         ///
         /// Range:            -128 to 128
@@ -19,8 +19,8 @@ namespace WiimoteApi
         private int[] _accel;
         
         /// \brief Size: 3x3. Calibration data for the accelerometer. This is not reported
-        ///        by the wiimote directly - it is instead collected from normal
-        ///        Wiimote accelerometer data.
+        ///        by the Wii Remote directly - it is instead collected from normal
+        ///        Wii Remote accelerometer data.
         /// \sa  AccelCalibrationStep,  CalibrateAccel(AccelCalibrationStep)
         ///
         /// Here are the 3 calibration steps:
@@ -59,7 +59,7 @@ namespace WiimoteApi
         }
 
         /// \brief Use current accelerometer values to update calibration data.  Use this when
-        ///        the user reports that the Wiimote is in a calibration position.
+        ///        the user reports that the Wii Remote is in a calibration position.
         /// \param The calibration step to perform.
         /// \sa  accel_calib,  AccelCalibrationStep
         public void CalibrateAccel(AccelCalibrationStep step)
@@ -78,7 +78,7 @@ namespace WiimoteApi
         }
 
         /// \brief Calibrated Accelerometer Data using experimental calibration points.
-        ///        These values are in Wiimote coordinates (in the direction of gravity)
+        ///        These values are in Wii Remote coordinates (in the direction of gravity)
         /// \sa  CalibrateAccel(),  GetAccelZeroPoints(),  accel,  accel_calib
         ///
         /// Range: -1 to 1
