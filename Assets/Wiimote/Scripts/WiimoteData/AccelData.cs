@@ -21,7 +21,7 @@ namespace WiimoteApi
         /// \brief Size: 3x3. Calibration data for the accelerometer. This is not reported
         ///        by the wiimote directly - it is instead collected from normal
         ///        Wiimote accelerometer data.
-        /// \sa ::AccelCalibrationStep, ::CalubrateAccel(AccelCalibrationStep)
+        /// \sa  AccelCalibrationStep,  CalibrateAccel(AccelCalibrationStep)
         ///
         /// Here are the 3 calibration steps:
         /// 1. Horizontal with the A button facing up
@@ -61,7 +61,7 @@ namespace WiimoteApi
         /// \brief Use current accelerometer values to update calibration data.  Use this when
         ///        the user reports that the Wiimote is in a calibration position.
         /// \param The calibration step to perform.
-        /// \sa ::accel_calib, ::AccelCalibrationStep
+        /// \sa  accel_calib,  AccelCalibrationStep
         public void CalibrateAccel(AccelCalibrationStep step)
         {
             for (int x = 0; x < 3; x++)
@@ -79,7 +79,7 @@ namespace WiimoteApi
 
         /// \brief Calibrated Accelerometer Data using experimental calibration points.
         ///        These values are in Wiimote coordinates (in the direction of gravity)
-        /// \sa ::CalibrateAccel(), ::GetAccelZeroPoints(), ::accel, ::accel_calib
+        /// \sa  CalibrateAccel(),  GetAccelZeroPoints(),  accel,  accel_calib
         ///
         /// Range: -1 to 1
         /// Up/Down:          +Z/-Z

@@ -1,6 +1,6 @@
 namespace WiimoteApi {
 /// \brief A type of data storage register that can be read from / written to.
-/// \sa ::Wiimote::SendRegisterWriteRequest(RegisterType, int, byte[]), ::Wiimote::SendRegisterReadRequest(RegisterType, int, int, ReadResponder)
+/// \sa Wiimote::SendRegisterWriteRequest(RegisterType, int, byte[]), Wiimote::SendRegisterReadRequest(RegisterType, int, int, ReadResponder)
 public enum RegisterType
 {
     /// The Wiimote's 16kB generic EEPROM memory module.  This is used to store calubration data
@@ -52,21 +52,21 @@ public enum InputDataType
 /// or less IR data in exchange for space for other data (such as extension
 /// controllers or accelerometer data).
 ///
-/// For each IR data type you can only use certain ::InputDataType reports in
+/// For each IR data type you can only use certain InputDataType reports in
 /// order to recieve the data.
 public enum IRDataType
 {
     /// \brief 10 bytes of data.  Contains position data for each dot only.
     /// 
-    /// Works with reports ::InputDataType::REPORT_BUTTONS_IR10_EXT9 and ::InputDataType::REPORT_BUTTONS_ACCEL_IR10_EXT6.
+    /// Works with reports InputDataType::REPORT_BUTTONS_IR10_EXT9 and InputDataType::REPORT_BUTTONS_ACCEL_IR10_EXT6.
     BASIC = 1,
     /// \brief 12 bytes of data.  Contains position and size data for each dot.
     /// 
-    /// Works with report ::InputDataType::REPORT_BUTTONS_ACCEL_IR12 only.
+    /// Works with report InputDataType::REPORT_BUTTONS_ACCEL_IR12 only.
     EXTENDED = 3,
     /// \brief 36 bytes of data.  Contains position, size, bounding box, and intensity data for each dot.
     ///
-    /// Works with interleaved report ::InputDataType::REPORT_INTERLEAVED / ::InputDataType::REPORT_INTERLEAVED_ALT only.
+    /// Works with interleaved report InputDataType::REPORT_INTERLEAVED / InputDataType::REPORT_INTERLEAVED_ALT only.
     FULL = 5
 }
 

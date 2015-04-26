@@ -4,7 +4,7 @@ namespace WiimoteApi {
     public class NunchuckData : WiimoteData
     {
         /// Nunchuck accelerometer values.  These are in the same (RAW) format
-        /// as ::Wiimote::accel.
+        /// as Wiimote::accel.
         public ReadOnlyArray<int> accel { get { return _accel_readonly; } }
         private ReadOnlyArray<int> _accel_readonly;
         private int[] _accel;
