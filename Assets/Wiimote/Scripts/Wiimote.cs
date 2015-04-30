@@ -243,7 +243,7 @@ public class Wiimote
     ///
     /// When the Wii Remote reports back what extension is connected, current_ext will be updated.
     /// \note If the Extension has not been activated yet (using ActivateExtension) the Wii Remote will report ExtensionController::NONE.
-    public bool RequestIdentifyExtension()
+    private bool RequestIdentifyExtension()
     {
         int res = SendRegisterReadRequest(RegisterType.CONTROL, 0xA400FA, 6, RespondIdentifyExtension);
         return res > 0;
@@ -281,7 +281,7 @@ public class Wiimote
     /// \return If the activation request was successfully sent to the Wii Remote.
     ///
     /// If there is no extension connected, undefined behavior may occur on the Wii Remote.
-    public bool ActivateExtension()
+    private bool ActivateExtension()
     {
         if (!Status.ext_connected)
             Debug.LogWarning("There is a request to activate an Extension controller even though it has not been confirmed to exist!  Trying anyway.");

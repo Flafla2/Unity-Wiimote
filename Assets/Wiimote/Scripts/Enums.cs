@@ -35,16 +35,31 @@ public enum InputDataType
     STATUS_INFO = 0x20,
     READ_MEMORY_REGISTERS = 0x21,
     ACKNOWLEDGE_OUTPUT_REPORT = 0x22,
+    /// Data Report Mode: Buttons
     REPORT_BUTTONS = 0x30,
+    /// Data Report Mode: Buttons, Accelerometer
     REPORT_BUTTONS_ACCEL = 0x31,
+    /// Data Report Mode: Buttons, 8 Extension bytes
     REPORT_BUTTONS_EXT8 = 0x32,
+    /// Data Report Mode: Buttons, Accelerometer, 12 IR bytes (IRDataType::EXTENDED)
     REPORT_BUTTONS_ACCEL_IR12 = 0x33,
+    /// Data Report Mode: Buttons, 19 Extension Bytes
     REPORT_BUTTONS_EXT19 = 0x34,
+    /// Data Report Mode: Buttons, Acceleromter, 16 Extension Bytes
     REPORT_BUTTONS_ACCEL_EXT16 = 0x35,
+    /// Data Report Mode: Buttons, 10 IR Bytes (IRDataType::BASIC), 9 Extension Bytes
     REPORT_BUTTONS_IR10_EXT9 = 0x36,
+    /// Data Report Mode: Buttons, Accelerometer, 10 IR Bytes (IRDataType::BASIC), 6 Extension Bytes
     REPORT_BUTTONS_ACCEL_IR10_EXT6 = 0x37,
+    /// Data Report Mode: 21 Extension Bytes
     REPORT_EXT21 = 0x3d,
+    /// \brief Data Report Mode: Interleaved (First half) Buttons, Accelerometer, 36 IR Bytes (IRDataType::FULL)
+    /// \warning Interleaved data reporting is currently not supported.  If you would like to use this you have to
+    ///          implement it yourself.
     REPORT_INTERLEAVED = 0x3e,
+    /// Data Report Mode: Interleaved (Second half) Buttons, Accelerometer, 36 IR Bytes (IRDataType::FULL)
+    /// \warning Interleaved data reporting is currently not supported.  If you would like to use this you have to
+    ///          implement it yourself.
     REPORT_INTERLEAVED_ALT = 0x3f
 }
 

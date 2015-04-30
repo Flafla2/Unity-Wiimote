@@ -1,0 +1,244 @@
+/**
+\mainpage
+
+\section intro Introduction
+
+This is an easy to use interface between Unity3D (or C# in general with minimal changes) and a Wii Remote controller.
+The library uses a slightly modified version of [Signal11's HIDAPI](https://github.com/signal11/hidapi) to handle
+low-level bluetooth communications.  In essence, the API itself is an implementation of the excellent
+reverse-engineering effort done at [Wiibrew](http://wiibrew.org/wiki/Wiimote).
+
+\tableofcontents
+
+\section find Finding Wii Remotes
+
+To get started with WiimoteAPI, you first need to find a bunch of Wiimote instances to interact with.  To do this, you
+can use WiimoteApi::WiimoteManager::FindWiimotes().  This will update WiimoteApi::WiimoteManager::Wiimotes (a list of active Wiimote instances)
+with any remotes that have connected since the last check.  When you are done using a Wiimote, you can deinitialize
+it using WiimoteApi::WiimoteManager::Cleanup(Wiimote).  This is necessary in order to gracefully cleanup native bluetooth code.
+Note that there is no hard limit as to how many Wii Remotes can be connected at a time.  This limitation is dependent
+on what bluetooth hardware / drivers you are currently using.
+
+<b>Example:</b>
+~~~~~~~~~~~~~~~{.cs}
+void InitWiimotes() {
+	WiimoteManager.FindWiimotes(); // Poll native bluetooth drivers to find Wiimotes
+
+	foreach(Wiimote remote in WiimoteManager.Wiimotes) {
+		// Do stuff.
+	}
+}
+
+void FinishedWithWiimotes() {
+	foreach(Wiimote remote in WiimoteManager.Wiimotes) {
+		WiimoteManager.Cleanup(remote);
+	}
+}
+~~~~~~~~~~~~~~~
+
+\section write Writing to the Remote
+
+To write data to a Wii Remote you can use one of the helper functions as defined in WiimoteApi::Wiimote.  *Be very careful* when
+using these functions, as they take up bluetooth bandwith (e.g. don't send out a ping every frame).
+
+####Setting the Player LED
+
+To set the 4 LEDs on the bottom of the remote, use WiimoteApi::Wiimote::SendPlayerLED(bool,bool,bool,bool).
+
+<b>Example:</b>
+~~~~~~~~~~~~~~~{.cs}
+Wiimote remote; // Initialized previously
+
+remote.SendPlayerLED(true, false, false, true); // LEDs will look like this: [* - - *]
+~~~~~~~~~~~~~~~
+
+\subsection write-status Requesting a Status Report
+
+The Wii Remote is capable of sending out "Status Reports" that give basic information such as the battery life of the
+controller.  This data is available through WiimoteApi::Wiimote::Status.  These status reports are sent by the Wii Remote automatically  when an extension controller is connected or disconnected.  You can request a status report 
+yourself using WiimoteApi::Wiimote::SendStatusInfoRequest().
+
+\subsection write-rumble Rumble
+
+You can activate or deactivate the Wii Remote's rumble motors by setting WiimoteApi::Wiimote::RumbleOn.  Note that **setting this 
+flag does not instantly activate rumble**.  To do that you must send ANY input report (that is, communication from the PC
+to the remote).
+
+<b>Example:</b>
+~~~~~~~~~~~~~~~{.cs}
+Wiimote remote; // Initialized previously
+
+remote.RumbleOn = true; // Enabled Rumble
+remote.SendStatusInfoRequest(); // Requests Status Report, encodes Rumble into input report
+
+Thread.Sleep(500); // Wait 0.5s
+
+remtote.RumbleOn = false; // Disabled Rumble
+remote.SendStatusInfoRequest(); // Requests Status Report, encodes Rumble into input report
+~~~~~~~~~~~~~~~
+
+\subsection write-datareport Changing the Data Report Mode
+
+The Wii Remote can only send up to 21 bytes of data at a time when reporting over bluetooth.  On a low level, it packs
+different types of data into this memory space, depending on your needs.  All of the Wii Remote's report types are
+represented by the \c REPORT_XXX types in the InputDataType enumeration.  You can set the Wii Remote's data reporting
+mode by using WiimoteApi::Wiimote::SendDataReportMode(InputDataType).
+
+<b>Example:</b>
+~~~~~~~~~~~~~~~{.cs}
+Wiimote remote; // Initialized previously
+
+remote.SendDataReportMode(InputDataType.REPORT_BUTTONS);       // Only report buttons, when a button is pressed
+
+remote.SendDataReportMode(InputDataType.REPORT_BUTTONS_ACCEL); // Report Buttons (as above) and accelerometer data
+
+remote.SendDataReportMode(InputDataType.REPORT_BUTTONS_EXT19); // Report Buttons and 19 Extension bytes
+															   //(useful for Guitar Hero controller, etc.)
+~~~~~~~~~~~~~~~
+
+\subsection write-ir Initializing the IR Camera
+
+In order to activate the Wii Remote's IR camera you must first perform a series of steps to calibrate / initialize the 
+camera on the Wii Remote's end.  These steps have already been implemented and can be performed by calling
+WiimoteApi::Wiimote::SetupIRCamera(IRDataType).  Note that this will change the Wii remote's data reporting mode 
+(see *Changing the Data Report Mode*) depending on what IRDataType you choose (See WiimoteApi::IRDataType for more info).
+
+<b>Example:</b>
+~~~~~~~~~~~~~~~{.cs}
+Wiimote remote; // Initialized previously
+
+remote.SetupIRCamera(IRDataType.BASIC);		// Basic IR dot position data
+
+// OR...
+
+remote.SetupIRCamera(IRDataType.EXTENDED);	// Position, Size data
+
+// Later, after Reading from the remote
+
+float[] pointer = wiimote.Ir.GetPointingPosition(); // See "Reading from the Remote"
+~~~~~~~~~~~~~~~
+
+\subsection write-wmp Wii Motion Plus / Wii Remote Plus
+
+If you want to check if a Wii Motion Plus is connected to the remote, you can use WiimoteApi::Wiimote::RequestIdentifyMotionPlus()
+to ping the Wii Remote and check if one is attached.  When the Wii Remote reports back its data, you can use 
+WiimoteApi::Wiimote::wmp_attached to see if a Wii Motion Plus is attached.  If you want, you can activate the Wii Motion Plus
+using WiimoteApi::Wiimote::ActivateWiiMotionPlus().  This makes the Wii Motion Plus behave as an extension controller (such as the
+nunchuck or the classic controller).  See *Reading from Extension Controllers* for details.
+
+<b>Example:</b>
+~~~~~~~~~~~~~~~{.cs}
+Wiimote remote; // Initialized previously
+bool activated = false;
+
+void Start() {
+	remote.RequestIdentifyMotionPlus();
+}
+
+void Update() {
+	if (!activated && remote.wmp_attached) {
+		remote.ActivateWiiMotionPlus();
+		activated = true;
+	}
+
+	if(activated && remote.current_ext == ExtensionController.MOTIONPLUS) {
+		MotionPlusData data = (MotionPlusData)remote.Extension; // data!
+		float dPitch = data.PitchSpeed;
+	}
+}
+~~~~~~~~~~~~~~~
+
+\section read Reading from the Remote
+
+The Wii remote automatically reports data either (1) in response to a request by WiimoteAPI (for example, when using 
+WiimoteApi::Wiimote::SendStatusInfoRequest()) or (2) in response to user input (for example, pressing a button on the remote or
+changing the remote's orientation).  The remote *only* reports on the data types included in its current output report
+(see "Changing the Data Report Mode").  Data not included in the Wii Remote's output report will not be updated.
+
+To actually poll a Wii Remote for recent changes, use WiimoteApi::Wiimote::ReadWiimoteData().  This will recieve input data from 
+the Wii Remote and interpret it.  Keep in mind that the Wii Remote reads function similarly to a Queue, in FIFO
+(first in, first out) order.  For example, if two reports were sent since the last \c ReadWiimoteData() call,
+the next call will only read and interpret the first of those two (and "pop" it off of the queue).  So, in order to
+make sure you don't fall behind the Wii Remote's update frequency, you can do something like this (in a game loop for 
+example):
+
+<b>Example:</b>
+~~~~~~~~~~~~~~~{.cs}
+void Update(Wiimote remote) { // called once per frame (for example)
+	int ret;
+	do
+	{
+	    ret = remote.ReadWiimoteData();
+	} while (ret > 0); // ReadWiimoteData() returns 0 when nothing is left to read.  So by doing this we continue to
+					   // update the Wiimote until it is "up to date."
+}
+~~~~~~~~~~~~~~~
+
+\subsection read-interpret Interpreting Recieved Data
+
+After recieving data through WiimoteApi::Wiimote::ReadWiimoteData(), WiimoteAPI automatically interprets and processes the raw
+bluetooth data into a format easily usable by your program.  To access this data, use WiimoteApi::Wiimote's data fields:
+
+ Field                          | Contains                                  
+------------------------------- | -------------------------------------
+ WiimoteApi::Wiimote::Accel     | AccelData: Wii Remote Accelerometer Data  
+ WiimoteApi::Wiimote::Button    | ButtonData: Wii Remote Button Data        
+ WiimoteApi::Wiimote::Ir 	    | IrData: Wii Remote IR Camera Data        
+ WiimoteApi::Wiimote::Status    | StatusData: Wii Remote Status Report Data 
+ WiimoteApi::Wiimote::Extension | See "Reading from extension controllers"
+
+\subsubsection read-ext Reading from Extension Controllers
+
+Extension controllers are automatically recognized and registered by WiimoteAPI.  You can use WiimoteApi::Wiimote::current_ext to
+see what (if any) extension controllers are connected.  You can then use this to cast WiimoteApi::Wiimote::Extension to that
+corresponding information type.
+
+<b>Example:</b>
+~~~~~~~~~~~~~~~{.cs}
+void Update(Wiimote remote) { // Called every frame (for example)
+	if(remote.current_ext == ExtensionController.NUNCHUCK) {
+		NunchuckData data = (NunchuckData)remote.Extension;
+		float[] stick = data.GetStick01(); // Position of the joystick
+
+		// do stuff...
+	}
+}
+~~~~~~~~~~~~~~~
+
+\section registers Reading and Writing to Registers
+
+The Wii Remote contains two memory modules: a 16 kilobyte EEPROM memory module, and a set of generic control registers.
+The EEPROM is used to store data such as calibration data and Miis from the Mii channel.  The control registers can be
+used to manage the Wii Remote's peripherals (such as the IR Camera and any extension controllers).  Internally, WiimoteAPI
+reads and writes to the control registers in setup features such as WiimoteApi::Wiimote::SetupIRCamera().  However, if you 
+want to read or write to the registers yourself, you can use 
+WiimoteApi::Wiimote::SendRegisterReadRequest(RegisterType,int,int,ReadResponder) and 
+WiimoteApi::Wiimote::SendRegisterWriteRequest(RegisterType,int,byte[]).
+
+Consult [Wiibrew's Wii Remote data reference](wiibrew.org/wiki/Wiimote) to see where to find different types of data.
+
+<b>Example:</b>
+~~~~~~~~~~~~~~~{.cs}
+// Example 1: Read Mii Data
+// 			  See http://wiibrew.org/wiki/Wiimote/Mii_Data for implementation details.
+void RespondRecieveMiiData(byte[] data) {
+	// do stuff with data[]
+}
+
+void StartReadMiiData(Wiimote remote) {
+	// Send an EEPROM read request to the Wiimote, starting at offset 0x0FCA, and with read length 752.
+	// When the Wiimote finishes reporting the data, RespondRecieveMiiData(byte[]) will be called.
+	remote.SendRegisterReadRequest(RegisterType.EEPROM, 0x0FCA, 752, RespondRecieveMiiData);
+}
+
+// Example 2: Write IR Calibration Data
+//			  See http://wiibrew.org/wiki/Wiimote#Sensitivity_Settings for implementation details.
+void WriteCalibData(Wiimote remote) {
+	// Send a control register write request to the Wiimote, starting at offset 0xB0000, and with the data:
+	// 02 00 00 71 01 00 aa 00 64
+	// This sets the IR camera's sensitivity to level 3 (as defined by the Wii's settings menu)
+	remote.SendRegisterWriteRequest(RegisterType.CONTROL, 0xb00000, 
+		new byte[] { 0x02, 0x00, 0x00, 0x71, 0x01, 0x00, 0xaa, 0x00, 0x64 });
+}
+~~~~~~~~~~~~~~~
+*/
