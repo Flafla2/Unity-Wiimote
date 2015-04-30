@@ -34,14 +34,14 @@ public class WiimoteManager
 
     /// \brief Attempts to find connected Wii Remotes and Wii Remote Pluses.
     /// \return If any new remotes were found.
-    public static bool FindWiimote()
+    public static bool FindWiimotes()
     {
-        bool ret = _FindWiimote(false);
-        ret = ret || _FindWiimote(true);
+        bool ret = _FindWiimotes(false);
+        ret = ret || _FindWiimotes(true);
         return ret;
     }
 
-    private static bool _FindWiimote(bool wiimoteplus)
+    private static bool _FindWiimotes(bool wiimoteplus)
     {
         //if (hidapi_wiimote != IntPtr.Zero)
         //    HIDapi.hid_close(hidapi_wiimote);
@@ -158,7 +158,7 @@ public class WiimoteManager
 
     /// \brief Attempts to recieve RAW DATA to the given bluetooth HID device.  This is essentially a wrapper around HIDApi.
     /// \param hidapi_wiimote The HIDApi device handle to write to.
-    /// \param data The data to write.
+    /// \param buf The data to write.
     /// \sa Wiimote::ReadWiimoteData()
     /// \warning DO NOT use this unless you absolutely need to bypass the given Wiimote communication functions.
     ///          Use the functionality provided by Wiimote instead.
