@@ -7,7 +7,6 @@ namespace WiimoteApi {
 
     public delegate void ReadResponder(byte[] data);
 
-[System.Serializable]
 public class Wiimote
 {
     /// Represents whether or not to turn on rumble when sending reports to
