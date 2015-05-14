@@ -137,7 +137,8 @@ public class Wiimote
         else if (val == ID_ClassicPro)
         {
             _current_ext = ExtensionController.CLASSIC_PRO;
-            _Extension = null;
+            if (_Extension == null || _Extension.GetType() != typeof(ClassicControllerData))
+                _Extension = new ClassicControllerData(this);
         }
         else if (val == ID_Nunchuck)
         {
@@ -148,7 +149,8 @@ public class Wiimote
         else if (val == ID_Classic)
         {
             _current_ext = ExtensionController.CLASSIC;
-            _Extension = null;
+            if (_Extension == null || _Extension.GetType() != typeof(ClassicControllerData))
+                _Extension = new ClassicControllerData(this);
         }
         else
         {
