@@ -60,7 +60,7 @@ namespace WiimoteApi
 
         /// \brief Use current accelerometer values to update calibration data.  Use this when
         ///        the user reports that the Wii Remote is in a calibration position.
-        /// \param The calibration step to perform.
+        /// \param step The calibration step to perform.
         /// \sa  accel_calib,  AccelCalibrationStep
         public void CalibrateAccel(AccelCalibrationStep step)
         {
