@@ -15,10 +15,7 @@ public class WiimoteDemo : MonoBehaviour {
     private float last_update_time = 0;
     private Wiimote wiimote;
 
-	// Use this for initialization
-	void Start () {
-	
-	}
+    private Vector2 scrollPosition;
 
     private Vector3 velocity = Vector3.zero;
 
@@ -57,12 +54,6 @@ public class WiimoteDemo : MonoBehaviour {
                 ir_dots[i].anchorMax = new Vector2(0, 0);
             }
 
-            //float ui_dot_size = (float)ir[i, 2] / 15f * 50f;
-            //if(wiimote.ir[i,2] != -1)
-            //    ir_dots[i].sizeDelta = new Vector2(ui_dot_size, ui_dot_size);
-            //else
-            //    ir_dots[i].sizeDelta = new Vector2(20, 20);
-
             ir_dots[i].anchorMin = new Vector2(x, y);
             ir_dots[i].anchorMax = new Vector2(x, y);
         }
@@ -74,41 +65,57 @@ public class WiimoteDemo : MonoBehaviour {
 
     void OnGUI()
     {
+        GUI.Box(new Rect(0,0,320,Screen.height), "");
+
+        GUILayout.BeginVertical(GUILayout.Width(300));
         GUILayout.Label("Wiimote Found: " + WiimoteManager.HasWiimote());
         if (GUILayout.Button("Find Wiimote"))
-        {
-            bool found = WiimoteManager.FindWiimotes();
-            if (found)
-            {
-                //WiimoteManager.SendRaw(new byte[] { (byte)WiimoteManager.InputDataType.REPORT_BUTTONS_ACCEL_IR12 });
-                //int gucci = WiimoteManager.SendPlayerLED(true, false, false, false);
-                //WiimoteManager.SetupIRCamera();
-                //WiimoteManager.SendDataReportMode(WiimoteManager.InputDataType.REPORT_BUTTONS);
-            }
-        }
+            WiimoteManager.FindWiimotes();
 
         if (GUILayout.Button("Cleanup"))
             WiimoteManager.Cleanup(wiimote);
 
+        GUILayout.Label("LED Test:");
+        GUILayout.BeginHorizontal();
         for (int x = 0; x < 4;x++ )
-            if (GUILayout.Button("LED Test "+x))
+            if (GUILayout.Button(""+x, GUILayout.Width(300/4)))
                 wiimote.SendPlayerLED(x == 0, x == 1, x == 2, x == 3);
+        GUILayout.EndHorizontal();
 
-        if(GUILayout.Button("Set Report: Button/Accel"))
+        GUILayout.Label("Set Report:");
+        GUILayout.BeginHorizontal();
+        if(GUILayout.Button("But/Acc", GUILayout.Width(300/4)))
             wiimote.SendDataReportMode(InputDataType.REPORT_BUTTONS_ACCEL);
+        if(GUILayout.Button("But/Ext8", GUILayout.Width(300/4)))
+            wiimote.SendDataReportMode(InputDataType.REPORT_BUTTONS_EXT8);
+        if(GUILayout.Button("B/A/Ext16", GUILayout.Width(300/4)))
+            wiimote.SendDataReportMode(InputDataType.REPORT_BUTTONS_ACCEL_EXT16);
+        if(GUILayout.Button("Ext21", GUILayout.Width(300/4)))
+            wiimote.SendDataReportMode(InputDataType.REPORT_EXT21);
+        GUILayout.EndHorizontal();
 
         if (GUILayout.Button("Request Status Report"))
             wiimote.SendStatusInfoRequest();
 
-        if(GUILayout.Button("IR Setup Sequence"))
+        GUILayout.Label("IR Setup Sequence:");
+        GUILayout.BeginHorizontal();
+        if(GUILayout.Button("Basic", GUILayout.Width(100)))
             wiimote.SetupIRCamera(IRDataType.BASIC);
+        if(GUILayout.Button("Extended", GUILayout.Width(100)))
+            wiimote.SetupIRCamera(IRDataType.EXTENDED);
+        if(GUILayout.Button("Full", GUILayout.Width(100)))
+            wiimote.SetupIRCamera(IRDataType.FULL);
+        GUILayout.EndHorizontal();
 
+        GUILayout.Label("Calibrate Accelerometer");
+        GUILayout.BeginHorizontal();
         for (int x = 0; x < 3; x++)
         {
             AccelCalibrationStep step = (AccelCalibrationStep)x;
-            if (GUILayout.Button("Calibrate Accel: " + step.ToString()))
+            if (GUILayout.Button(step.ToString(), GUILayout.Width(100)))
                 wiimote.Accel.CalibrateAccel(step);
         }
+        GUILayout.EndHorizontal();
 
         if (GUILayout.Button("Print Calibration Data"))
         {
@@ -124,12 +131,45 @@ public class WiimoteDemo : MonoBehaviour {
             Debug.Log(str.ToString());
         }
 
-        if (wiimote != null && wiimote.Extension != null && wiimote.current_ext == ExtensionController.NUNCHUCK)
+        if (wiimote != null && wiimote.Extension != null)
         {
-            NunchuckData data = (NunchuckData)wiimote.Extension;
-            GUILayout.Label("Nunchuck Stick: " + data.stick[0] + ", " + data.stick[1]);
+            scrollPosition = GUILayout.BeginScrollView(scrollPosition);
+            GUIStyle bold = new GUIStyle(GUI.skin.button);
+            bold.fontStyle = FontStyle.Bold;
+            if (wiimote.current_ext == ExtensionController.NUNCHUCK) {
+                GUILayout.Label("Nunchuck:", bold);
+                NunchuckData data = (NunchuckData)wiimote.Extension;
+                GUILayout.Label("Stick: " + data.stick[0] + ", " + data.stick[1]);
+                GUILayout.Label("C: " + data.c);
+                GUILayout.Label("Z: " + data.z);
+            } else if (wiimote.current_ext == ExtensionController.CLASSIC || wiimote.current_ext == ExtensionController.CLASSIC_PRO) {
+                GUILayout.Label("Classic Controller:", bold);
+                ClassicControllerData data = (ClassicControllerData)wiimote.Extension;
+                GUILayout.Label("Stick Left: " + data.lstick[0] + ", " + data.lstick[1]);
+                GUILayout.Label("Stick Right: " + data.rstick[0] + ", " + data.rstick[1]);
+                GUILayout.Label("Trigger Left: " + data.ltrigger_range);
+                GUILayout.Label("Trigger Right: " + data.rtrigger_range);
+                GUILayout.Label("Trigger Left Button: " + data.ltrigger_switch);
+                GUILayout.Label("Trigger Right Button: " + data.rtrigger_switch);
+                GUILayout.Label("A: " + data.a);
+                GUILayout.Label("B: " + data.b);
+                GUILayout.Label("X: " + data.x);
+                GUILayout.Label("Y: " + data.y);
+                GUILayout.Label("Plus: " + data.plus);
+                GUILayout.Label("Minus: " + data.minus);
+                GUILayout.Label("Home: " + data.home);
+                GUILayout.Label("ZL: " + data.zl);
+                GUILayout.Label("ZR: " + data.zr);
+                GUILayout.Label("D-Up: " + data.dpad_up);
+                GUILayout.Label("D-Down: " + data.dpad_down);
+                GUILayout.Label("D-Left: " + data.dpad_left);
+                GUILayout.Label("D-Right: " + data.dpad_right);
+            }
+            GUILayout.EndScrollView();
+        } else {
+            scrollPosition = Vector2.zero;
         }
-
+        GUILayout.EndVertical();
     }
 
     void OnDrawGizmos()
@@ -156,13 +196,6 @@ public class WiimoteDemo : MonoBehaviour {
 
         Gizmos.color = Color.red;
         Gizmos.DrawLine(model.rot.position, model.rot.position + model.rot.rotation*new Vector3(accel_x,-accel_y,accel_z)*2);
-
-        //Gizmos.color = Color.red;
-        //Gizmos.DrawLine(model.rot.position, model.rot.position + Vector3.right * accel_x * 2);
-        //Gizmos.color = Color.green;
-        //Gizmos.DrawLine(model.rot.position, model.rot.position + Vector3.up * accel_y * 2);
-        //Gizmos.color = Color.blue;
-        //Gizmos.DrawLine(model.rot.position, model.rot.position + Vector3.forward * accel_z * 2);
     }
 
     [System.Serializable]
