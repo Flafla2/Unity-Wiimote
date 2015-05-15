@@ -9,9 +9,11 @@ namespace WiimoteApi {
 
 public class WiimoteManager
 {
-    public const ushort vendor_id = 0x057e;
+    public const ushort vendor_id_wiimote = 0x057e;
+    public const ushort vendor_id_procontroller = 0x0b6a;
     public const ushort product_id_wiimote = 0x0306;
     public const ushort product_id_wiimoteplus = 0x0330;
+    public const ushort product_id_procontroller = 0xa132;
 
     /// A list of all currently connected Wii Remotes.
     public static List<Wiimote> Wiimotes { get { return _Wiimotes; } }
@@ -32,21 +34,36 @@ public class WiimoteManager
 
     // ------------- RAW HIDAPI INTERFACE ------------- //
 
-    /// \brief Attempts to find connected Wii Remotes and Wii Remote Pluses.
+    /// \brief Attempts to find connected Wii Remotes, Wii Remote Pluses or Wii U Pro Controllers
     /// \return If any new remotes were found.
     public static bool FindWiimotes()
     {
-        bool ret = _FindWiimotes(false);
-        ret = ret || _FindWiimotes(true);
+        bool ret = _FindWiimotes(WiimoteType.WIIMOTE);
+        ret = ret || _FindWiimotes(WiimoteType.WIIMOTEPLUS);
+        ret = ret || _FindWiimotes(WiimoteType.PROCONTROLLER);
         return ret;
     }
 
-    private static bool _FindWiimotes(bool wiimoteplus)
+    private static bool _FindWiimotes(WiimoteType type)
     {
         //if (hidapi_wiimote != IntPtr.Zero)
         //    HIDapi.hid_close(hidapi_wiimote);
 
-        IntPtr ptr = HIDapi.hid_enumerate(vendor_id, wiimoteplus ? product_id_wiimoteplus : product_id_wiimote);
+        ushort vendor = 0;
+        ushort product = 0;
+
+        if(type == WiimoteType.WIIMOTE) {
+            vendor = vendor_id_wiimote;
+            product = product_id_wiimote;
+        } else if(type == WiimoteType.WIIMOTEPLUS) {
+            vendor = vendor_id_wiimote;
+            product = product_id_wiimoteplus;
+        } else if(type == WiimoteType.PROCONTROLLER) {
+            vendor = vendor_id_procontroller;
+            product = product_id_procontroller;
+        }
+
+        IntPtr ptr = HIDapi.hid_enumerate(vendor, product);
         IntPtr cur_ptr = ptr;
 
         if (ptr == IntPtr.Zero)
@@ -74,10 +91,9 @@ public class WiimoteManager
             if (remote == null)
             {
                 IntPtr handle = HIDapi.hid_open_path(enumerate.path);
+                remote = new Wiimote(handle, enumerate.path, type);
                 if (Debug_Messages)
                     Debug.Log("Found New Remote: " + remote.hidapi_path);
-
-                remote = new Wiimote(handle, enumerate.path, wiimoteplus);
 
                 Wiimotes.Add(remote);
 

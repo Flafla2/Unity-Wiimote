@@ -19,6 +19,10 @@ public class WiimoteDemo : MonoBehaviour {
 
     private Vector3 velocity = Vector3.zero;
 
+    void Start () {
+        WiimoteManager.Debug_Messages = true;
+    }
+
 	// Update is called once per frame
 	void Update () {
         if (!WiimoteManager.HasWiimote()) { velocity = Vector3.zero; return; }
