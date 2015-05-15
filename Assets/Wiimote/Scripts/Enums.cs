@@ -96,4 +96,16 @@ public enum AccelCalibrationStep {
     LEFT_SIDE_UP = 2
 }
 
+/// These different Wii Remote Types are used to differentiate between different devices that behave like the Wii Remote.
+public enum WiimoteType {
+    /// The original Wii Remote (Name: RVL-CNT-01).  This includes all Wii Remotes manufactured for the original Wii.
+    WIIMOTE, 
+    /// The new Wii Remote Plus (Name: RVL-CNT-01-TR).  Wii Remote Pluses are now standard with Wii U consoles and come
+    /// with a built-in Wii Motion Plus extension.
+    WIIMOTEPLUS, 
+    /// The Wii U Pro Controller (Name: RVL-CNT-01-UC) behaves identically to a Wii Remote with a Classic Controller
+    /// attached.  Obviously the Pro Controller does not support IR so those features will not work.
+    PROCONTROLLER
+}
+
 } // namespace WiimoteApi

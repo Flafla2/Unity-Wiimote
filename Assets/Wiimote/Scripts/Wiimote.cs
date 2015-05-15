@@ -44,11 +44,8 @@ public class Wiimote
     public string hidapi_path { get { return _hidapi_path; } }
     private string _hidapi_path;
 
-    /// True if this Wii Remote is a Wii Remote Plus (Nintendo RVL-CNT-01-TR)
-    /// Of course, if this is true you can expect a Wii Motion Plus to be
-    /// connected.
-    public bool wiimoteplus { get { return _wiimoteplus; } }
-    private bool _wiimoteplus = false;
+    public WiimoteType Type { get { return _Type; } }
+    private WiimoteType _Type;
 
     private RegisterReadData CurrentReadData = null;
 
@@ -68,17 +65,23 @@ public class Wiimote
     public ExtensionController current_ext { get { return _current_ext; } }
     private ExtensionController _current_ext = ExtensionController.NONE;
 
-    public Wiimote(IntPtr hidapi_handle, string hidapi_path, bool wiimoteplus)
+    public Wiimote(IntPtr hidapi_handle, string hidapi_path, WiimoteType Type)
     {
         _hidapi_handle  = hidapi_handle;
         _hidapi_path    = hidapi_path;
-        _wiimoteplus    = wiimoteplus;
+        _Type    = Type;
 
         _Accel  = new AccelData(this);
         _Button = new ButtonData(this);
         _Ir     = new IRData(this);
         _Status = new StatusData(this);
         _Extension = null;
+
+        Debug.Log(Type.ToString());
+        if(Type == WiimoteType.PROCONTROLLER) {
+            _current_ext = ExtensionController.CLASSIC;
+            _Extension = new ClassicControllerData(this);
+        }
     }
 
     private static byte[] ID_InactiveMotionPlus = new byte[] {0x00, 0x00, 0xA6, 0x20, 0x00, 0x05};
@@ -534,12 +537,12 @@ public class Wiimote
                     SendDataReportMode(last_report_type);   // If we don't update the data report mode, no updates will be sent
                 }
 
-                if (Status.ext_connected != old_ext_connected)
+                if (Status.ext_connected != old_ext_connected && Type != WiimoteType.PROCONTROLLER)
                 {
                     if (Status.ext_connected)                // The Wii Remote doesn't allow reading from the extension identifier
-                    {                                               // when nothing is connected.
+                    {                                        // when nothing is connected.
                         ActivateExtension();
-                        RequestIdentifyExtension();         // Identify what extension was connected.
+                        RequestIdentifyExtension();          // Identify what extension was connected.
                     }
                     else
                     {
