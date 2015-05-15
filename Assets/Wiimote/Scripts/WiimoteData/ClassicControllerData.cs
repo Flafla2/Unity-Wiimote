@@ -113,8 +113,8 @@ namespace WiimoteApi {
 			if(data == null || data.Length < 6)
 				return false;
 
-			_lstick[0] = (byte)(data[0] & 0x1f);
-			_lstick[1] = (byte)(data[1] & 0x1f);
+			_lstick[0] = (byte)(data[0] & 0x3f);
+			_lstick[1] = (byte)(data[1] & 0x3f);
 
 			_rstick[0] = (byte)(((data[0] & 0xc0) >> 3) |
 								((data[1] & 0xc0) >> 5) |
@@ -126,22 +126,24 @@ namespace WiimoteApi {
 
 			_rtrigger_range = (byte)(data[3] & 0x1f);
 
-			_dpad_right 	 = (data[4] & 0x80) == 0x80;
-			_dpad_down  	 = (data[4] & 0x40) == 0x40;
-			_ltrigger_switch = (data[4] & 0x20) == 0x20;
-			_minus 			 = (data[4] & 0x10) == 0x10;
-			_home 			 = (data[4] & 0x08) == 0x08;
-			_plus			 = (data[4] & 0x04) == 0x04;
-			_rtrigger_switch = (data[4] & 0x02) == 0x02;
+			// Bit is zero when pressed, one when up.  This is really weird so I reverse
+			// the bit with !=
+			_dpad_right 	 = (data[4] & 0x80) != 0x80;
+			_dpad_down  	 = (data[4] & 0x40) != 0x40;
+			_ltrigger_switch = (data[4] & 0x20) != 0x20;
+			_minus 			 = (data[4] & 0x10) != 0x10;
+			_home 			 = (data[4] & 0x08) != 0x08;
+			_plus			 = (data[4] & 0x04) != 0x04;
+			_rtrigger_switch = (data[4] & 0x02) != 0x02;
 
-			_zl 			 = (data[5] & 0x80) == 0x80;
-			_b 				 = (data[5] & 0x40) == 0x40;
-			_y 				 = (data[5] & 0x20) == 0x20;
-			_a 				 = (data[5] & 0x10) == 0x10;
-			_x 				 = (data[5] & 0x08) == 0x08;
-			_zr 			 = (data[5] & 0x04) == 0x04;
-			_dpad_left		 = (data[5] & 0x02) == 0x02;
-			_dpad_up		 = (data[5] & 0x01) == 0x01;
+			_zl 			 = (data[5] & 0x80) != 0x80;
+			_b 				 = (data[5] & 0x40) != 0x40;
+			_y 				 = (data[5] & 0x20) != 0x20;
+			_a 				 = (data[5] & 0x10) != 0x10;
+			_x 				 = (data[5] & 0x08) != 0x08;
+			_zr 			 = (data[5] & 0x04) != 0x04;
+			_dpad_left		 = (data[5] & 0x02) != 0x02;
+			_dpad_up		 = (data[5] & 0x01) != 0x01;
 
 			return true;
 		}
