@@ -18,7 +18,7 @@ namespace WiimoteApi
         ///
         /// int[dot index, x (0) / y (1) / size (2)]
         public ReadOnlyMatrix<int> ir { get { return _ir_readonly; } }
-        public ReadOnlyMatrix<int> _ir_readonly;
+        private ReadOnlyMatrix<int> _ir_readonly;
         private int[,] _ir;
 
         public IRData(Wiimote Owner)
