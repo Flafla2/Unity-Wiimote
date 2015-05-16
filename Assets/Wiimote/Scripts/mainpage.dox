@@ -191,7 +191,13 @@ bluetooth data into a format easily usable by your program.  To access this data
 
 Extension controllers are automatically recognized and registered by WiimoteAPI.  You can use WiimoteApi::Wiimote::current_ext to
 see what (if any) extension controllers are connected.  You can then use this to cast WiimoteApi::Wiimote::Extension to that
-corresponding information type.
+corresponding information type.  Here are all currently supported controllers and their WiimoteApi::WiimoteData subclass:
+
+Controller           | WiimoteApi::ExtensionController Enum        | WiimoteApi::WiimoteData Subclass
+-------------------- | ------------------------------------------- | --------------------------------
+Nunchuck             | WiimoteApi::ExtensionController::NUNCHUCK   | WiimoteApi::NunchuckData
+Classic Controller   | WiimoteApi::ExtensionController::CLASSIC    | WiimoteApi::ClassicControllerData
+Wii Motion Plus      | WiimoteApi::ExtensionController::MOTIONPLUS | WiimoteApi::MotionPlusData
 
 <b>Example:</b>
 ~~~~~~~~~~~~~~~{.cs}

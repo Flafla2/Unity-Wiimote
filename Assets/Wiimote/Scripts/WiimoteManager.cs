@@ -15,7 +15,7 @@ public class WiimoteManager
 
     /// A list of all currently connected Wii Remotes.
     public static List<Wiimote> Wiimotes { get { return _Wiimotes; } }
-    public static List<Wiimote> _Wiimotes = new List<Wiimote>();
+    private static List<Wiimote> _Wiimotes = new List<Wiimote>();
 
     /// If true, WiimoteManager and Wiimote will write data reports and other debug
     /// messages to the console.  Any incorrect usages / errors will still be reported.
