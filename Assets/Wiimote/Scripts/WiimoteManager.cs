@@ -27,7 +27,6 @@ public class WiimoteManager
     /// If you attempt to write at a rate faster than this, the extra write requests will
     /// be queued up and written to the Wii Remote after the delay is up.
     public static int MaxWriteFrequency = 20; // In ms
-    private static float LastWriteTime = 0;
     private static Queue<WriteQueueData> WriteQueue;
 
     // ------------- RAW HIDAPI INTERFACE ------------- //

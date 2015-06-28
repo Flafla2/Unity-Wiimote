@@ -12,16 +12,13 @@ public class WiimoteDemo : MonoBehaviour {
 
     public bool UseCalibratedAccel = false;
 
-    private float last_update_time = 0;
     private Wiimote wiimote;
 
     private Vector2 scrollPosition;
 
-    private Vector3 velocity = Vector3.zero;
-
 	// Update is called once per frame
 	void Update () {
-        if (!WiimoteManager.HasWiimote()) { velocity = Vector3.zero; return; }
+        if (!WiimoteManager.HasWiimote()) { return; }
 
         wiimote = WiimoteManager.Wiimotes[0];
         int ret;
@@ -131,20 +128,20 @@ public class WiimoteDemo : MonoBehaviour {
             Debug.Log(str.ToString());
         }
 
-        if (wiimote != null && wiimote.Extension != null)
+        if (wiimote != null && wiimote.current_ext != ExtensionController.NONE)
         {
             scrollPosition = GUILayout.BeginScrollView(scrollPosition);
             GUIStyle bold = new GUIStyle(GUI.skin.button);
             bold.fontStyle = FontStyle.Bold;
             if (wiimote.current_ext == ExtensionController.NUNCHUCK) {
                 GUILayout.Label("Nunchuck:", bold);
-                NunchuckData data = (NunchuckData)wiimote.Extension;
+                NunchuckData data = wiimote.Nunchuck;
                 GUILayout.Label("Stick: " + data.stick[0] + ", " + data.stick[1]);
                 GUILayout.Label("C: " + data.c);
                 GUILayout.Label("Z: " + data.z);
             } else if (wiimote.current_ext == ExtensionController.CLASSIC || wiimote.current_ext == ExtensionController.CLASSIC_PRO) {
                 GUILayout.Label("Classic Controller:", bold);
-                ClassicControllerData data = (ClassicControllerData)wiimote.Extension;
+                ClassicControllerData data = wiimote.ClassicController;
                 GUILayout.Label("Stick Left: " + data.lstick[0] + ", " + data.lstick[1]);
                 GUILayout.Label("Stick Right: " + data.rstick[0] + ", " + data.rstick[1]);
                 GUILayout.Label("Trigger Left: " + data.ltrigger_range);

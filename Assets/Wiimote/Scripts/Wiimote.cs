@@ -17,13 +17,49 @@ public class Wiimote
     /// Accelerometer data component
     public AccelData     Accel      { get { return _Accel; } }
     private AccelData   _Accel;
-    /// Extension data component.  This is null when no extension has been
-    /// detected.  When an extension is detected, this will be set to an
-    /// instance of one of the following classes:
-    /// Nunchuck        - NunchuckData
-    /// Wii Motion Plus - MotionPlusData
-    public WiimoteData   Extension  { get { return _Extension; } }
+
+    /// If a Nunchuck is currently connected to the Wii Remote's extension port,
+    /// this contains all relevant Nunchuck controller data as it is reported by
+    /// the Wiimote.  If no Nunchuck is connected, this is \c null.
+    ///
+    /// \sa current_ext
+    public NunchuckData Nunchuck {
+        get {
+            if(current_ext == ExtensionController.NUNCHUCK)
+                return (NunchuckData)_Extension;
+            return null;
+        }
+    }
+
+    /// If a Classic Controller is currently connected to the Wii Remote's extension port,
+    /// this contains all relevant Classic Controller data as it is reported by
+    /// the Wiimote.  If no Classic Controller is connected, this is \c null.
+    ///
+    /// \sa current_ext
+    public ClassicControllerData ClassicController {
+        get {
+            if(current_ext == ExtensionController.CLASSIC)
+                return (ClassicControllerData)_Extension;
+            return null;
+        }
+    }
+
+    /// If a Wii Motion Plus is currently connected to the Wii Remote's extension port,
+    /// and has been activated by ActivateWiiMotionPlus(), this contains all relevant 
+    /// Wii Motion Plus controller data as it is reported by the Wiimote.  If no
+    /// WMP is connected, this is \c null.
+    ///
+    /// \sa current_ext, wmp_attached, ActivateWiiMotionPlus()
+    public MotionPlusData MotionPlus {
+        get {
+            if(current_ext == ExtensionController.MOTIONPLUS)
+                return (MotionPlusData)_Extension;
+            return null;
+        }
+    }
+
     private WiimoteData _Extension;
+
     /// Button data component.
     public ButtonData    Button     { get { return _Button; } }
     private ButtonData  _Button;
@@ -603,8 +639,8 @@ public class Wiimote
                 for (int x = 0; x < ext.Length; x++)
                     ext[x] = data[x + 2];
 
-                if (Extension != null)
-                    Extension.InterpretData(ext);
+                if (_Extension != null)
+                    _Extension.InterpretData(ext);
                 break;
             case InputDataType.REPORT_BUTTONS_ACCEL_IR12: // done.
                 buttons = new byte[] { data[0], data[1] };
@@ -626,8 +662,8 @@ public class Wiimote
                 for (int x = 0; x < ext.Length; x++)
                     ext[x] = data[x + 2];
 
-                if (Extension != null)
-                    Extension.InterpretData(ext);
+                if (_Extension != null)
+                    _Extension.InterpretData(ext);
                 break;
             case InputDataType.REPORT_BUTTONS_ACCEL_EXT16: // done.
                 buttons = new byte[] { data[0], data[1] };
@@ -640,8 +676,8 @@ public class Wiimote
                 for (int x = 0; x < ext.Length; x++)
                     ext[x] = data[x + 5];
 
-                if (Extension != null)
-                    Extension.InterpretData(ext);
+                if (_Extension != null)
+                    _Extension.InterpretData(ext);
                 break;
             case InputDataType.REPORT_BUTTONS_IR10_EXT9: // done.
                 buttons = new byte[] { data[0], data[1] };
@@ -656,8 +692,8 @@ public class Wiimote
                 for (int x = 0; x < 9; x++)
                     ext[x] = data[x + 12];
 
-                if (Extension != null)
-                    Extension.InterpretData(ext);
+                if (_Extension != null)
+                    _Extension.InterpretData(ext);
                 break;
             case InputDataType.REPORT_BUTTONS_ACCEL_IR10_EXT6: // done.
                 buttons = new byte[] { data[0], data[1] };
@@ -675,16 +711,16 @@ public class Wiimote
                 for (int x = 0; x < 6; x++)
                     ext[x] = data[x + 15];
 
-                if (Extension != null)
-                    Extension.InterpretData(ext);
+                if (_Extension != null)
+                    _Extension.InterpretData(ext);
                 break;
             case InputDataType.REPORT_EXT21: // done.
                 ext = new byte[21];
                 for (int x = 0; x < ext.Length; x++)
                     ext[x] = data[x];
 
-                if (Extension != null)
-                    Extension.InterpretData(ext);
+                if (_Extension != null)
+                    _Extension.InterpretData(ext);
                 break;
             case InputDataType.REPORT_INTERLEAVED:
                 // TODO

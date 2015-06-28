@@ -87,7 +87,22 @@ public enum IRDataType
 
 public enum ExtensionController
 {
-    NONE, NUNCHUCK, CLASSIC, CLASSIC_PRO, MOTIONPLUS, MOTIONPLUS_NUNCHUCK, MOTIONPLUS_CLASSIC
+    /// No Extension Controller is connected.
+    NONE, 
+    /// A Nunchuck Controller
+    NUNCHUCK, 
+    /// A Classic Controller
+    CLASSIC, 
+    /// A Classic Controller Pro.  This is functionally identical to a classic controller.
+    CLASSIC_PRO, 
+    /// An activated Wii Motion Plus with no extension controllers in passthrough mode.
+    MOTIONPLUS, 
+    /// An activated Wii Motion Plus with a Nunchuck in passthrough mode.
+    /// \warning Nunchuck passthrough is currently not supported.
+    MOTIONPLUS_NUNCHUCK, 
+    /// An activated Wii Motion Plus with a Classic Controller in passthrough mode. 
+    /// \warning Classic Controller passthrough is currently not supported
+    MOTIONPLUS_CLASSIC
 }
 
 public enum AccelCalibrationStep {
