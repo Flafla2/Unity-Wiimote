@@ -81,8 +81,8 @@ remote.SendStatusInfoRequest(); // Requests Status Report, encodes Rumble into i
 
 The Wii Remote can only send up to 21 bytes of data at a time when reporting over bluetooth.  On a low level, it packs
 different types of data into this memory space, depending on your needs.  All of the Wii Remote's report types are
-represented by the \c REPORT_XXX types in the InputDataType enumeration.  You can set the Wii Remote's data reporting
-mode by using WiimoteApi::Wiimote::SendDataReportMode(InputDataType).
+represented by the \c REPORT_XXX types in the WiimoteApi::InputDataType enumeration.  You can set the Wii Remote's data 
+reporting mode by using WiimoteApi::Wiimote::SendDataReportMode(InputDataType).
 
 <b>Example:</b>
 ~~~~~~~~~~~~~~~{.cs}
@@ -142,8 +142,9 @@ void Update() {
 	}
 
 	if(activated && remote.current_ext == ExtensionController.MOTIONPLUS) {
-		MotionPlusData data = (MotionPlusData)remote.Extension; // data!
+		MotionPlusData data = remote.MotionPlus; // data!
 		float dPitch = data.PitchSpeed;
+		// Use the data...
 	}
 }
 ~~~~~~~~~~~~~~~
@@ -179,31 +180,33 @@ void Update(Wiimote remote) { // called once per frame (for example)
 After recieving data through WiimoteApi::Wiimote::ReadWiimoteData(), WiimoteAPI automatically interprets and processes the raw
 bluetooth data into a format easily usable by your program.  To access this data, use WiimoteApi::Wiimote's data fields:
 
- Field                          | Contains                                  
-------------------------------- | -------------------------------------
- WiimoteApi::Wiimote::Accel     | AccelData: Wii Remote Accelerometer Data  
- WiimoteApi::Wiimote::Button    | ButtonData: Wii Remote Button Data        
- WiimoteApi::Wiimote::Ir 	    | IrData: Wii Remote IR Camera Data        
- WiimoteApi::Wiimote::Status    | StatusData: Wii Remote Status Report Data 
- WiimoteApi::Wiimote::Extension | See "Reading from extension controllers"
+ Field                         | Contains                                  
+------------------------------ | -----------------------------------------
+ WiimoteApi::Wiimote::Accel    | AccelData: Wii Remote Accelerometer Data  
+ WiimoteApi::Wiimote::Button   | ButtonData: Wii Remote Button Data        
+ WiimoteApi::Wiimote::Ir 	   | IrData: Wii Remote IR Camera Data        
+ WiimoteApi::Wiimote::Status   | StatusData: Wii Remote Status Report Data 
 
 \subsubsection read-ext Reading from Extension Controllers
 
 Extension controllers are automatically recognized and registered by WiimoteAPI.  You can use WiimoteApi::Wiimote::current_ext to
-see what (if any) extension controllers are connected.  You can then use this to cast WiimoteApi::Wiimote::Extension to that
-corresponding information type.  Here are all currently supported controllers and their WiimoteApi::WiimoteData subclass:
+see what (if any) extension controllers are connected.  You can then query one of WiimoteApi::Wiimote's extension properties
+based on what is connected.  Here are all currently supported controllers and their WiimoteApi::Wiimote property:
 
-Controller           | WiimoteApi::ExtensionController Enum        | WiimoteApi::WiimoteData Subclass
--------------------- | ------------------------------------------- | --------------------------------
-Nunchuck             | WiimoteApi::ExtensionController::NUNCHUCK   | WiimoteApi::NunchuckData
-Classic Controller   | WiimoteApi::ExtensionController::CLASSIC    | WiimoteApi::ClassicControllerData
-Wii Motion Plus      | WiimoteApi::ExtensionController::MOTIONPLUS | WiimoteApi::MotionPlusData
+Controller           | WiimoteApi::ExtensionController Enum | WiimoteApi::Wiimote Property
+-------------------- | ------------------------------------ | --------------------------------------
+Nunchuck             | NUNCHUCK                             | WiimoteApi::Wiimote::Nunchuck
+Classic Controller   | CLASSIC                              | WiimoteApi::Wiimote::ClassicController
+Wii Motion Plus      | MOTIONPLUS                           | WiimoteApi::Wiimote::MotionPlus
+
+\warning Keep in mind that a Wii Motion Plus *must* be activated (see *Wii Motion Plus / Wii Remote Plus* above)
+		 in order for the Wii Remote to begin reporting Wii Motion Plus data.
 
 <b>Example:</b>
 ~~~~~~~~~~~~~~~{.cs}
 void Update(Wiimote remote) { // Called every frame (for example)
 	if(remote.current_ext == ExtensionController.NUNCHUCK) {
-		NunchuckData data = (NunchuckData)remote.Extension;
+		NunchuckData data = remote.Nunchuck;
 		float[] stick = data.GetStick01(); // Position of the joystick
 
 		// do stuff...

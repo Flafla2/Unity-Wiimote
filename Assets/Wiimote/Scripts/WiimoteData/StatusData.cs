@@ -42,6 +42,7 @@ namespace WiimoteApi
             : base(Owner)
         {
             _led = new bool[4];
+            _led_readonly = new ReadOnlyArray<bool>(_led);
         }
 
         public override bool InterpretData(byte[] data)
