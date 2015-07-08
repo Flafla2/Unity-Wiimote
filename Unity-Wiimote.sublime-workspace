@@ -7,6 +7,38 @@
 	},
 	"buffers":
 	[
+		{
+			"file": "README.md",
+			"settings":
+			{
+				"buffer_size": 3054,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "LICENSE.txt",
+			"settings":
+			{
+				"buffer_size": 1081,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "hidapi-modified/hid-windows.c",
+			"settings":
+			{
+				"buffer_size": 26115,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "/C/Users/Adrian/AppData/Roaming/Sublime Text 3/Packages/User/Preferences.sublime-settings",
+			"settings":
+			{
+				"buffer_size": 106,
+				"line_ending": "Unix"
+			}
+		}
 	],
 	"build_system": "",
 	"build_system_choices":
@@ -45,13 +77,16 @@
 	},
 	"expanded_folders":
 	[
-		"/Users/Adrian/Documents/GitHub/Unity-Wiimote",
-		"/Users/Adrian/Documents/GitHub/Unity-Wiimote/Assets",
-		"/Users/Adrian/Documents/GitHub/Unity-Wiimote/Assets/Wiimote",
-		"/Users/Adrian/Documents/GitHub/Unity-Wiimote/Assets/Wiimote/Scripts"
+		"/C/Users/Adrian/Documents/Random Unity Projects/Wiimote-Unity",
+		"/C/Users/Adrian/Documents/Random Unity Projects/Wiimote-Unity/Assets",
+		"/C/Users/Adrian/Documents/Random Unity Projects/Wiimote-Unity/Assets/Art",
+		"/C/Users/Adrian/Documents/Random Unity Projects/Wiimote-Unity/Assets/Wiimote",
+		"/C/Users/Adrian/Documents/Random Unity Projects/Wiimote-Unity/hidapi-modified"
 	],
 	"file_history":
 	[
+		"/C/Users/Adrian/Documents/Random Unity Projects/Wiimote-Unity/Unity-Wiimote.sublime-project",
+		"/C/Users/Adrian/Documents/Random Unity Projects/Wiimote-Unity/hidapi-modified/hid-windows.c",
 		"/Users/Adrian/Documents/GitHub/Unity-Wiimote/Assets/Wiimote/Scripts/WiimoteManager.cs",
 		"/Users/Adrian/Library/Application Support/Sublime Text 3/Packages/Default/Preferences.sublime-settings",
 		"/Users/Adrian/Library/Application Support/Sublime Text 3/Packages/User/Preferences.sublime-settings",
@@ -98,8 +133,126 @@
 	"groups":
 	[
 		{
+			"selected": 0,
 			"sheets":
 			[
+				{
+					"buffer": 0,
+					"file": "README.md",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3054,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2567,
+								2567
+							]
+						],
+						"settings":
+						{
+							"rulers":
+							[
+								120
+							],
+							"syntax": "Packages/Markdown/Markdown.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "LICENSE.txt",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1081,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1081,
+								1081
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "hidapi-modified/hid-windows.c",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 26115,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": -0.0,
+						"translation.y": 10244.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "/C/Users/Adrian/AppData/Roaming/Sublime Text 3/Packages/User/Preferences.sublime-settings",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 106,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								45,
+								45
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JSON.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				}
 			]
 		}
 	],
