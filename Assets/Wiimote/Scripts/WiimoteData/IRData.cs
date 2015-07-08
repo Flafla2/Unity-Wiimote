@@ -120,7 +120,10 @@ namespace WiimoteApi
         }
 
         /// \brief Size: 2.  Returns the position at which the Wii Remote is pointing to.  This is a value from 0-1
-        ///        representing the screen-space pointing position in X and Y.  Assume a 4x3 aspect ratio.
+        ///        representing the camera-space pointing position in X and Y.  Assume a 4x3 aspect ratio.
+        ///
+        /// This takes into account the rotation of the remote (using the Wii Remote's Accelerometer) to correct for
+        /// rotational distortion.
         public float[] GetPointingPosition()
         {
             float[] ret = new float[2];
@@ -144,11 +147,13 @@ namespace WiimoteApi
         }
 
         /// \brief Size: 2.  Returns the midpoint of all IR dots, or [0, 0] if none are found.  This is a value from 0-1
-        ///        representing the screen-space position in X and Y.
-        public float[] GetIRMidpoint()
+        ///        representing the camera-space position in X and Y.
+        /// \param predict If true, and one of the IR "dots" from the sensor bar is outside of the IR camera field of view,
+        ///                WiimoteApi will attempt to predict the other dot's position outside of the camera (default true).
+        public float[] GetIRMidpoint(bool predict = true)
         {
             float[] ret = new float[2];
-            float[,] sensorIR = GetProbableSensorBarIR();
+            float[,] sensorIR = GetProbableSensorBarIR(predict);
             ret[0] = sensorIR[0, 0] + sensorIR[1, 0];
             ret[1] = sensorIR[0, 1] + sensorIR[1, 1];
             ret[0] /= 2f * 1023f;
@@ -158,67 +163,77 @@ namespace WiimoteApi
         }
 
         private float[] LastIRSeparation = new float[] { 0, 0 };
-        /// \brief Size: 2x2.  Returns the most probable positions of the two sensor bar dots.
-        ///        If less than two dots are found, returns -1 for all data.
+        private int[] SensorBarIndices = new int[] { -1, -1 };
+
+        /// \brief Attempts to identify which of the four IR "dots" reported by the Wii Remote are from the Wii sensor bar.
         /// \param predict If true, and one of the dots is outside of the Wii Remote's field of view,
-        ///                WiimoteApi will attempt to predict the other dot's position outside of the screen.
-        ///
-        /// Range: 0 - 1 with respect to Wii Remote camera dimensions.  If \c predict is true this may be outside of that range.
-        public float[,] GetProbableSensorBarIR(bool predict = false)
+        ///                WiimoteApi will attempt to predict the other dot's position outside of the screen (default true).
+        /// \return First Dimension: Index of detected IR dot.
+        ///         Second Dimension: 0: X, 1: Y
+        ///         Size: 2x2
+        ///         Range: 0-1 with respect to the Wii Remote Camera dimensions.  If \c predict is true this may be outside of that range.
+        public float[,] GetProbableSensorBarIR(bool predict = true)
         {
-            int count = 0;
-            int[] ind = new int[2];
-            for (int x = 0; x < 4; x++)
-            {
-                if (count > 1 || _ir[x, 0] == -1 || _ir[x, 1] == -1)
-                    continue;
+            // If necessary, change the current "sensor bar" IR indices to new ones.  This happens if one of the dots went out of focus and a new one took its place.
+            // We do this because the Wii Remote reports "consistent" IR dot indices - that is, it tracks the IR dots and doesn't change their index in the IR report.
+            // This way we can rule out extraneous dots that pop in and out randomly as they aren't being tracked.
+            for (int x = 0; x < 2; x++) {
+                if (SensorBarIndices[x] == -1 || _ir[SensorBarIndices[x], 0] == -1) {
+                    SensorBarIndices[x] = -1;
+                    for (int y = 0; y < 4; y++) {
+                        if (SensorBarIndices[(x + 1) % 2] == y) continue; // If the other sensor bar index is this one, ignore it.
 
-                ind[count] = x;
-                if (count == 1 && _ir[ind[0], 0] > _ir[x, 0])
-                {
-                    ind[1] = ind[0];
-                    ind[0] = x;
+                        if (_ir[y, 0] != -1) { // If this index is valid, use it.
+                            SensorBarIndices[x] = y;
+                            y = 4; // end loop
+                        }
+                    }
                 }
-                count++;
             }
 
-            if (count == 0 || (count == 1 && !predict))
+            // The first index is the "primary" index (from which the IR separation is derived) so if it goes out of focus
+            // the other dot becomes primary, and the IR separation is negated.
+            if (SensorBarIndices[0] == -1 && SensorBarIndices[1] != -1)
+            {
+                SensorBarIndices[0] = SensorBarIndices[1];
+                SensorBarIndices[1] = -1;
+
+                LastIRSeparation[0] *= -1;
+                LastIRSeparation[1] *= -1;
+            }
+
+            if (SensorBarIndices[0] != -1 && SensorBarIndices[1] != -1)
+            {
+                float[,] ret = new float[2, 2];
+                for (int x = 0; x < 2; x++)
+                {
+                    for (int y = 0; y < 2; y++)
+                    {
+                        ret[x, y] = _ir[SensorBarIndices[x], y];
+                    }
+                }
+
+                LastIRSeparation[0] = ret[1, 0] - ret[0, 0];
+                LastIRSeparation[1] = ret[1, 1] - ret[0, 1];
+
+                return ret;
+            } else if (predict && SensorBarIndices[0] != -1) // We have enought data to predict (1 dot) and predicting was requested
+            {
+                float[,] ret = new float[2, 2];
+                ret[0, 0] = _ir[SensorBarIndices[0], 0];
+                ret[0, 1] = _ir[SensorBarIndices[0], 1];
+
+                ret[1, 0] = ret[0, 0] + LastIRSeparation[0];
+                ret[1, 1] = ret[0, 1] + LastIRSeparation[1];
+
+                return ret;
+            } else // We don't have enough data
+            {
+                LastIRSeparation[0] = 0;
+                LastIRSeparation[1] = 0;
+
                 return new float[,] { { -1, -1 }, { -1, -1 } };
-
-            float[,] ret = new float[2, 2];
-            for (int x = 0; x < count; x++)
-            {
-                for (int y = 0; y < 2; y++)
-                    ret[x, y] = _ir[ind[x], y];
             }
-
-            if (count == 1) // one of the dots are outside of the wiimote FOV
-            {
-
-                if (ret[0, 0] < 1023 / 2) // Left side of the screen, means that it's the right dot
-                {
-                    for (int x = 0; x < 2; x++)
-                    {
-                        ret[1, x] = ret[0, x];
-                        ret[0, x] -= LastIRSeparation[x];
-                    }
-                }
-                else
-                {
-                    for (int x = 0; x < 2; x++)
-                    {
-                        ret[1, x] = ret[0, x];
-                        ret[1, x] += LastIRSeparation[x];
-                    }
-                }
-            }
-            else if (count == 2)
-            {
-                LastIRSeparation[0] = Mathf.Abs(ret[0, 0] - ret[1, 0]);
-                LastIRSeparation[1] = Mathf.Abs(ret[0, 1] - ret[1, 1]);
-            }
-
-            return ret;
         }
     }
 }
