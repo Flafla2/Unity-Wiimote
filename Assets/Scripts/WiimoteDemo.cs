@@ -70,7 +70,15 @@ public class WiimoteDemo : MonoBehaviour {
             WiimoteManager.FindWiimotes();
 
         if (GUILayout.Button("Cleanup"))
+        {
             WiimoteManager.Cleanup(wiimote);
+            wiimote = null;
+        }
+
+        if (wiimote == null)
+            return;
+
+        GUILayout.Label("Extension: " + wiimote.current_ext.ToString());
 
         GUILayout.Label("LED Test:");
         GUILayout.BeginHorizontal();
@@ -103,6 +111,12 @@ public class WiimoteDemo : MonoBehaviour {
         if(GUILayout.Button("Full", GUILayout.Width(100)))
             wiimote.SetupIRCamera(IRDataType.FULL);
         GUILayout.EndHorizontal();
+
+        GUILayout.Label("WMP Attached: " + wiimote.wmp_attached);
+        if (GUILayout.Button("Request Identify WMP"))
+            wiimote.RequestIdentifyWiiMotionPlus();
+        if (wiimote.wmp_attached && GUILayout.Button("Activate WMP"))
+            wiimote.ActivateWiiMotionPlus();
 
         GUILayout.Label("Calibrate Accelerometer");
         GUILayout.BeginHorizontal();
@@ -161,6 +175,19 @@ public class WiimoteDemo : MonoBehaviour {
                 GUILayout.Label("D-Down: " + data.dpad_down);
                 GUILayout.Label("D-Left: " + data.dpad_left);
                 GUILayout.Label("D-Right: " + data.dpad_right);
+            }
+            else if (wiimote.current_ext == ExtensionController.MOTIONPLUS)
+            {
+                GUILayout.Label("Wii Motion Plus:", bold);
+                MotionPlusData data = wiimote.MotionPlus;
+                GUILayout.Label("Pitch Speed: " + data.PitchSpeed);
+                GUILayout.Label("Yaw Speed: " + data.YawSpeed);
+                GUILayout.Label("Roll Speed: " + data.RollSpeed);
+                GUILayout.Label("Pitch Slow: " + data.PitchSlow);
+                GUILayout.Label("Yaw Slow: " + data.YawSlow);
+                GUILayout.Label("Roll Slow: " + data.RollSlow);
+                if (GUILayout.Button("Zero Out WMP"))
+                    data.SetZeroValues();
             }
             GUILayout.EndScrollView();
         } else {

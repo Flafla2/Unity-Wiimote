@@ -185,6 +185,7 @@ public class Wiimote
         else if (val == ID_Classic)
         {
             _current_ext = ExtensionController.CLASSIC;
+            ActivateExtension();
             if (_Extension == null || _Extension.GetType() != typeof(ClassicControllerData))
                 _Extension = new ClassicControllerData(this);
         }
@@ -193,6 +194,9 @@ public class Wiimote
             _current_ext = ExtensionController.NONE;
             _Extension = null;
         }
+
+        if(current_ext != ExtensionController.MOTIONPLUS && current_ext != ExtensionController.MOTIONPLUS_CLASSIC && current_ext != ExtensionController.MOTIONPLUS_NUNCHUCK)
+            ActivateExtension();
     }
 
     #region Setups
@@ -573,8 +577,7 @@ public class Wiimote
                 if (Status.ext_connected != old_ext_connected)
                 {
                     if (Status.ext_connected)                // The Wii Remote doesn't allow reading from the extension identifier
-                    {                                               // when nothing is connected.
-                        ActivateExtension();
+                    {                                        // when nothing is connected.
                         RequestIdentifyExtension();         // Identify what extension was connected.
                     }
                     else
@@ -597,7 +600,7 @@ public class Wiimote
                 byte error = (byte)(data[2] & 0x0f);
                 if (error == 0x07)
                 {
-                    Debug.LogError("Wiimote reports Read Register error 7: Attempting to read from a write-only register.  Aborting read.");
+                    Debug.LogError("Wiimote reports Read Register error 7: Attempting to read from a write-only register ("+CurrentReadData.Offset.ToString("x")+").  Aborting read.");
                     CurrentReadData = null;
                     return status;
                 }
