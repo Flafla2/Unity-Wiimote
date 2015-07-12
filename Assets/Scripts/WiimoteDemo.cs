@@ -12,19 +12,31 @@ public class WiimoteDemo : MonoBehaviour {
 
     public bool UseCalibratedAccel = false;
 
+    private Quaternion initial_rotation;
+
     private Wiimote wiimote;
 
     private Vector2 scrollPosition;
 
-	// Update is called once per frame
+    void Start() {
+        initial_rotation = model.rot.localRotation;
+    }
+
 	void Update () {
         if (!WiimoteManager.HasWiimote()) { return; }
 
         wiimote = WiimoteManager.Wiimotes[0];
+
         int ret;
         do
         {
             ret = wiimote.ReadWiimoteData();
+
+            if (wiimote.current_ext == ExtensionController.MOTIONPLUS)
+                model.rot.Rotate(-wiimote.MotionPlus.PitchSpeed * 0.01f,
+                                  wiimote.MotionPlus.YawSpeed * 0.01f,
+                                  wiimote.MotionPlus.RollSpeed * 0.01f,
+                                    Space.Self);
         } while (ret > 0);
 
         model.a.enabled = wiimote.Button.a;
@@ -38,6 +50,9 @@ public class WiimoteDemo : MonoBehaviour {
         model.plus.enabled = wiimote.Button.plus;
         model.minus.enabled = wiimote.Button.minus;
         model.home.enabled = wiimote.Button.home;
+
+        if (wiimote.current_ext != ExtensionController.MOTIONPLUS)
+            model.rot.localRotation = initial_rotation;
 
         if (ir_dots.Length < 4) return;
 
@@ -115,7 +130,7 @@ public class WiimoteDemo : MonoBehaviour {
         GUILayout.Label("WMP Attached: " + wiimote.wmp_attached);
         if (GUILayout.Button("Request Identify WMP"))
             wiimote.RequestIdentifyWiiMotionPlus();
-        if (wiimote.wmp_attached && GUILayout.Button("Activate WMP"))
+        if ((wiimote.wmp_attached || wiimote.wiimoteplus) && GUILayout.Button("Activate WMP"))
             wiimote.ActivateWiiMotionPlus();
 
         GUILayout.Label("Calibrate Accelerometer");
@@ -187,7 +202,10 @@ public class WiimoteDemo : MonoBehaviour {
                 GUILayout.Label("Yaw Slow: " + data.YawSlow);
                 GUILayout.Label("Roll Slow: " + data.RollSlow);
                 if (GUILayout.Button("Zero Out WMP"))
+                {
                     data.SetZeroValues();
+                    model.rot.localRotation = Quaternion.LookRotation(Vector3.right, GetAccelVector());
+                }
             }
             GUILayout.EndScrollView();
         } else {
@@ -200,6 +218,12 @@ public class WiimoteDemo : MonoBehaviour {
     {
         if (wiimote == null) return;
 
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(model.rot.position, model.rot.position + model.rot.rotation*GetAccelVector()*2);
+    }
+
+    private Vector3 GetAccelVector()
+    {
         float accel_x;
         float accel_y;
         float accel_z;
@@ -208,18 +232,17 @@ public class WiimoteDemo : MonoBehaviour {
         {
             float[] accel = wiimote.Accel.GetCalibratedAccelData();
             accel_x = -accel[0];
-            accel_y =  accel[2];
+            accel_y = accel[2];
             accel_z = -accel[1];
         }
         else
         {
             accel_x = -(float)wiimote.Accel.accel[0] / 128f;
-            accel_y =  (float)wiimote.Accel.accel[2] / 128f;
+            accel_y = (float)wiimote.Accel.accel[2] / 128f;
             accel_z = -(float)wiimote.Accel.accel[1] / 128f;
         }
 
-        Gizmos.color = Color.red;
-        Gizmos.DrawLine(model.rot.position, model.rot.position + model.rot.rotation*new Vector3(accel_x,-accel_y,accel_z)*2);
+        return new Vector3(accel_x, -accel_y, accel_z);
     }
 
     [System.Serializable]

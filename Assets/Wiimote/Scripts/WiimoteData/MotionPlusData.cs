@@ -6,21 +6,21 @@
         public float PitchSpeed { get { return _PitchSpeed; } }
         private float _PitchSpeed = 0;
 
-        private uint _PitchSpeedRaw = 0;
+        private int _PitchSpeedRaw = 0;
 
         /// The rotational velocity in the Yaw direction of the Wii Remote, as
         /// reported by the Wii Motion Plus.  Measured in degrees per second.
         public float YawSpeed { get { return _YawSpeed; } }
         private float _YawSpeed = 0;
 
-        private uint _YawSpeedRaw = 0;
+        private int _YawSpeedRaw = 0;
 
         /// The rotational velocity in the Roll direction of the Wii Remote, as
         /// reported by the Wii Motion Plus.  Measured in degrees per second.
         public float RollSpeed { get { return _RollSpeed; } }
         private float _RollSpeed;
 
-        private uint _RollSpeedRaw = 0;
+        private int _RollSpeedRaw = 0;
 
         /// If true, the Wii Motion Plus reports that it is in "slow" mode in the
         /// Pitch direction.  This means that it is more precise as it doesn't have
@@ -48,9 +48,9 @@
         public bool ExtensionConnected { get { return _ExtensionConnected; } }
         private bool _ExtensionConnected = false;
 
-        private uint _PitchZero = 8063;
-        private uint _YawZero = 8063;
-        private uint _RollZero = 8063;
+        private int _PitchZero = 8063;
+        private int _YawZero = 8063;
+        private int _RollZero = 8063;
 
         public MotionPlusData(Wiimote Owner) : base(Owner) { }
 
@@ -60,11 +60,11 @@
                 return false;
 
             _YawSpeedRaw    = data[0];
-            _YawSpeedRaw   |= (uint)(data[3] & 0xfc) << 6;
+            _YawSpeedRaw   |= (data[3] & 0xfc) << 6;
             _RollSpeedRaw   = data[1];
-            _RollSpeedRaw  |= (uint)(data[4] & 0xfc) << 6;
+            _RollSpeedRaw  |= (data[4] & 0xfc) << 6;
             _PitchSpeedRaw  = data[2];
-            _PitchSpeedRaw |= (uint)(data[5] & 0xfc) << 6;
+            _PitchSpeedRaw |= (data[5] & 0xfc) << 6;
 
             _YawSlow = (data[3] & 0x02) == 0x02;
             _PitchSlow = (data[3] & 0x01) == 0x01;
@@ -75,9 +75,9 @@
             // The Analog to Digital Converter (ADC) range is 2 * 8192.0
             // 595.0 is derived from the gyro itself (2.27 mV/deg/s)
             // http://wiibrew.org/wiki/Wiimote/Extension_Controllers/Wii_Motion_Plus
-            _PitchSpeed = (float)((int)_PitchSpeedRaw-_PitchZero) / (8192.0f / 595.0f);
-            _YawSpeed =   (float)((int)_YawSpeedRaw-_YawZero)     / (8192.0f / 595.0f);
-            _RollSpeed =  (float)((int)_RollSpeedRaw-_RollZero)   / (8192.0f / 595.0f);
+            _PitchSpeed = (float)(_PitchSpeedRaw-_PitchZero) / (8192.0f / 595.0f);
+            _YawSpeed =   (float)(_YawSpeedRaw-_YawZero)     / (8192.0f / 595.0f);
+            _RollSpeed =  (float)(_RollSpeedRaw-_RollZero)   / (8192.0f / 595.0f);
 
             // At high speeds, the Wii Remote Reports with less precision to reach higher values.
             // The multiplier is 2000 / 440 when in fast mode.
@@ -94,11 +94,21 @@
         /// Calibrates the zero values of the Wii Motion Plus in the Pitch, Yaw, and Roll directions.
         /// The Wii Remote should be in a flat, motionless position when calibrating (for example, face
         /// down on a flat surface).
+        ///
+        /// A good idea here is to reference the Accelerometer values of the Wii Remote to make sure that
+        /// your simulated rotation is consistent with the actual rotation of the remote.
         public void SetZeroValues()
         {
             _PitchZero = _PitchSpeedRaw;
             _YawZero = _YawSpeedRaw;
             _RollZero = _RollSpeedRaw;
+
+            _PitchSpeedRaw = 0;
+            _YawSpeedRaw = 0;
+            _RollSpeedRaw = 0;
+            _PitchSpeed = 0;
+            _YawSpeed = 0;
+            _RollSpeed = 0;
         }
     }
 }
