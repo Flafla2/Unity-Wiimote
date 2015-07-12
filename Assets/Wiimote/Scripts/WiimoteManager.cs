@@ -73,8 +73,8 @@ public class WiimoteManager
             if (remote == null)
             {
                 IntPtr handle = HIDapi.hid_open_path(enumerate.path);
-                if (Debug_Messages)
-                    Debug.Log("Found New Remote: " + remote.hidapi_path);
+                //if (Debug_Messages)
+                //    Debug.Log("Found New Remote: " + remote.hidapi_path);
 
                 remote = new Wiimote(handle, enumerate.path, wiimoteplus);
 

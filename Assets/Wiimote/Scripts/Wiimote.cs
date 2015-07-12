@@ -81,6 +81,7 @@ public class Wiimote
     private string _hidapi_path;
 
     /// True if this Wii Remote is a Wii Remote Plus (Nintendo RVL-CNT-01-TR)
+    /// OR if the Wii Remote is an older Wii Remote Plus without the -TR suffix.
     /// Of course, if this is true you can expect a Wii Motion Plus to be
     /// connected.
     public bool wiimoteplus { get { return _wiimoteplus; } }
@@ -93,7 +94,7 @@ public class Wiimote
 
     /// True if a Wii Motion Plus is attached to the Wii Remote, and it
     /// has NOT BEEN ACTIVATED.  When the WMP is activated this value is
-    /// false.  This is only updated when the remote is requested from
+    /// false.  This is only updated when WMP state is requested from
     /// Wii Remote registers (see: RequestIdentifyWiiMotionPlus())
     public bool wmp_attached { get { return _wmp_attached; } }
     private bool _wmp_attached = false;
@@ -115,9 +116,11 @@ public class Wiimote
         _Ir     = new IRData(this);
         _Status = new StatusData(this);
         _Extension = null;
+
+        RequestIdentifyWiiMotionPlus(); // why not?
     }
 
-    private static byte[] ID_InactiveMotionPlus = new byte[] {0x00, 0x00, 0xA6, 0x20, 0x00, 0x05};
+    private static byte[] ID_InactiveMotionPlus  = new byte[] {0x00, 0x00, 0xA6, 0x20, 0x00, 0x05};
 
     private void RespondIdentifyWiiMotionPlus(byte[] data)
     {
@@ -126,9 +129,19 @@ public class Wiimote
             _wmp_attached = false;
             return;
         }
+
+        if (data[0] == 0x01)        // This is a weird inconsistency with some Wii Remote Pluses.  They don't have the -TR suffix
+            _wiimoteplus = true;    // or a different PID as an identifier.  Instead they have a different WMP extension identifier.
+                                    // It occurs on some of the oldest Wii Remote Pluses available (pre-2012).
+
         for (int x = 0; x < data.Length; x++)
         {
-            if (data[x] != ID_InactiveMotionPlus[x])
+            // [x != 4] is necessary because byte 5 of the identifier changes based on the state of the remote
+            // It is 0x00 on startup, 0x04 when deactivated, 0x05 when deactivated nunchuck passthrough,
+            // and 0x07 when deactivated classic passthrough
+            //
+            // [x != 0] is necessary due to the inconsistency noted above.
+            if (x != 4 && x != 0 && data[x] != ID_InactiveMotionPlus[x])
             {
                 _wmp_attached = false;
                 return;
@@ -154,7 +167,8 @@ public class Wiimote
         for (int x = 0; x < 6; x++) resized[x] = data[5-x];
         long val = BitConverter.ToInt64(resized, 0);
 
-        if (val == ID_ActiveMotionPlus)
+        // Disregard bytes 0 and 5 - see RespondIdentifyWiiMotionPlus()
+        if ((val | 0xff000000ff00) == (ID_ActiveMotionPlus | 0xff000000ff00))
         {
             _current_ext = ExtensionController.MOTIONPLUS;
             if(_Extension == null || _Extension.GetType() != typeof(MotionPlusData))
@@ -570,7 +584,6 @@ public class Wiimote
                 }
                 else                                        // We haven't requested any data report type, meaning a controller has connected.
                 {
-                    Debug.Log("An extension has been connected or disconnected.");
                     SendDataReportMode(last_report_type);   // If we don't update the data report mode, no updates will be sent
                 }
 
@@ -578,11 +591,13 @@ public class Wiimote
                 {
                     if (Status.ext_connected)                // The Wii Remote doesn't allow reading from the extension identifier
                     {                                        // when nothing is connected.
+                        Debug.Log("An extension has been connected.");
                         RequestIdentifyExtension();         // Identify what extension was connected.
                     }
                     else
                     {
                         _current_ext = ExtensionController.NONE;
+                        Debug.Log("An extension has been disconnected.");
                     }
                 }
                 break;
