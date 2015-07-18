@@ -52,6 +52,13 @@
         private int _YawZero = 8063;
         private int _RollZero = 8063;
 
+        // I would like to say that this was calculated or something, but honestly this was created
+        // simply through trial and error.  I am going to tweak this constant to see if I can get it
+        // any better in the future.  Realistically this value is the result of the Analog/Digital converter
+        // in the Wii Motion Plus along with the analog output of the gyros, but the documentation is so
+        // shitty that I don't even care anymore.
+        private const float MagicCalibrationConstant = 0.02179f;
+
         public MotionPlusData(Wiimote Owner) : base(Owner) { }
 
         public override bool InterpretData(byte[] data)
@@ -71,16 +78,13 @@
             _RollSlow = (data[4] & 0x02) == 0x02;
             _ExtensionConnected = (data[4] & 0x01) == 0x01;
 
-            // Multipliers below are derived from the electronics of the Wii Motion Plus
-            // The Analog to Digital Converter (ADC) range is 2 * 8192.0
-            // 595.0 is derived from the gyro itself (2.27 mV/deg/s)
-            // http://wiibrew.org/wiki/Wiimote/Extension_Controllers/Wii_Motion_Plus
-            _PitchSpeed = (float)(_PitchSpeedRaw-_PitchZero) / (8192.0f / 595.0f);
-            _YawSpeed =   (float)(_YawSpeedRaw-_YawZero)     / (8192.0f / 595.0f);
-            _RollSpeed =  (float)(_RollSpeedRaw-_RollZero)   / (8192.0f / 595.0f);
+            _PitchSpeed = (float)(_PitchSpeedRaw - _PitchZero) * MagicCalibrationConstant;
+            _YawSpeed = (float)(_YawSpeedRaw - _YawZero) * MagicCalibrationConstant;
+            _RollSpeed = (float)(_RollSpeedRaw - _RollZero) * MagicCalibrationConstant;
 
             // At high speeds, the Wii Remote Reports with less precision to reach higher values.
             // The multiplier is 2000 / 440 when in fast mode.
+            // http://wiibrew.org/wiki/Wiimote/Extension_Controllers/Wii_Motion_Plus
             if (!PitchSlow)
                 _PitchSpeed *= 2000f / 440f;
             if (!YawSlow)

@@ -58,6 +58,28 @@ namespace WiimoteApi
             return true;
         }
 
+        /// \brief Interprets raw byte data reported by the Wii Remote when in interleaved data reporting mode.
+        ///        The format of the actual bytes passed to this depends on the Wii Remote's current data report
+        ///        mode and the type of data being passed.
+        /// 
+        /// \sa Wiimote::ReadWiimoteData()
+        public bool InterpretDataInterleaved(byte[] data1, byte[] data2)
+        {
+            if (data1 == null || data2 == null || data1.Length != 21 || data2.Length != 21)
+                return false;
+
+            _accel[0] = (int)data1[2] << 2;
+            _accel[1] = (int)data2[2] << 2;
+            _accel[2] = ((data1[1] & 0x60) << 1) | 
+                ((data1[0] & 0x60) >> 1) | 
+                ((data2[1] & 0x60) >> 3) | 
+                ((data2[0] & 0x60) >> 5);
+
+            for (int x = 0; x < 3; x++) _accel[x] -= 0x200; // center around zero.
+
+            return true;
+        }
+
         /// \brief Use current accelerometer values to update calibration data.  Use this when
         ///        the user reports that the Wii Remote is in a calibration position.
         /// \param step The calibration step to perform.

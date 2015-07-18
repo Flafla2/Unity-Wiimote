@@ -8,15 +8,18 @@ public class WiimoteDemo : MonoBehaviour {
 
     public WiimoteModel model;
     public RectTransform[] ir_dots;
+    public RectTransform[] ir_bb;
     public RectTransform ir_pointer;
 
-    public bool UseCalibratedAccel = false;
+    public bool UseCalibratedAccel = true;
 
     private Quaternion initial_rotation;
 
     private Wiimote wiimote;
 
     private Vector2 scrollPosition;
+
+    private Vector3 wmpOffset = Vector3.zero;
 
     void Start() {
         initial_rotation = model.rot.localRotation;
@@ -32,11 +35,13 @@ public class WiimoteDemo : MonoBehaviour {
         {
             ret = wiimote.ReadWiimoteData();
 
-            if (wiimote.current_ext == ExtensionController.MOTIONPLUS)
-                model.rot.Rotate(-wiimote.MotionPlus.PitchSpeed * 0.01f,
-                                  wiimote.MotionPlus.YawSpeed * 0.01f,
-                                  wiimote.MotionPlus.RollSpeed * 0.01f,
-                                    Space.Self);
+            if (wiimote.current_ext == ExtensionController.MOTIONPLUS) {
+                Vector3 offset = new Vector3(  -wiimote.MotionPlus.PitchSpeed * 0.01f,
+                                                wiimote.MotionPlus.YawSpeed   * 0.01f,
+                                                wiimote.MotionPlus.RollSpeed  * 0.01f);
+                wmpOffset += offset;
+                model.rot.Rotate(offset, Space.Self);
+            }
         } while (ret > 0);
 
         model.a.enabled = wiimote.Button.a;
@@ -68,6 +73,17 @@ public class WiimoteDemo : MonoBehaviour {
 
             ir_dots[i].anchorMin = new Vector2(x, y);
             ir_dots[i].anchorMax = new Vector2(x, y);
+
+            if (ir[i, 2] != -1)
+            {
+                int index = (int)ir[i,2];
+                float xmin = (float)wiimote.Ir.ir[index,3] / 127f;
+                float ymin = (float)wiimote.Ir.ir[index,4] / 127f;
+                float xmax = (float)wiimote.Ir.ir[index,5] / 127f;
+                float ymax = (float)wiimote.Ir.ir[index,6] / 127f;
+                ir_bb[i].anchorMin = new Vector2(xmin, ymin);
+                ir_bb[i].anchorMax = new Vector2(xmax, ymax);
+            }
         }
 
         float[] pointer = wiimote.Ir.GetPointingPosition();
@@ -205,7 +221,9 @@ public class WiimoteDemo : MonoBehaviour {
                 {
                     data.SetZeroValues();
                     model.rot.localRotation = Quaternion.LookRotation(Vector3.right, GetAccelVector());
+                    wmpOffset = Vector3.zero;
                 }
+                GUILayout.Label("Offset: " + wmpOffset.ToString());
             }
             GUILayout.EndScrollView();
         } else {
