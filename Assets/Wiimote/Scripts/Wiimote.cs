@@ -105,6 +105,9 @@ public class Wiimote
     public ExtensionController current_ext { get { return _current_ext; } }
     private ExtensionController _current_ext = ExtensionController.NONE;
 
+    private byte[] InterleavedDataBuffer = new byte[18];
+    private bool ExpectingSecondInterleavedPacket = false;
+
     public Wiimote(IntPtr hidapi_handle, string hidapi_path, bool wiimoteplus)
     {
         _hidapi_handle  = hidapi_handle;
@@ -270,7 +273,6 @@ public class Wiimote
                 res = SendDataReportMode(InputDataType.REPORT_BUTTONS_ACCEL_IR12);
                 break;
             case IRDataType.FULL:
-                Debug.LogWarning("Interleaved data reporting is currently not supported.");
                 res = SendDataReportMode(InputDataType.REPORT_INTERLEAVED);
                 break;
         }
@@ -416,6 +418,8 @@ public class Wiimote
         }
 
         last_report_type = mode;
+
+        ExpectingSecondInterleavedPacket = false;
 
         return SendWithType(OutputDataType.DATA_REPORT_MODE, new byte[] { 0x00, (byte)mode });
     }
@@ -741,13 +745,41 @@ public class Wiimote
                     _Extension.InterpretData(ext);
                 break;
             case InputDataType.REPORT_INTERLEAVED:
-                // TODO
+                ReadInterleaved(data);
                 break;
             case InputDataType.REPORT_INTERLEAVED_ALT:
-                // TODO
+                ReadInterleaved(data);
                 break;
         }
         return status;
+    }
+
+    private void ReadInterleaved(byte[] data)
+    {
+        if (ExpectingSecondInterleavedPacket)
+        {
+            ExpectingSecondInterleavedPacket = false;
+
+            byte[] buttons = new byte[] { data[0], data[1] };
+            Button.InterpretData(buttons);
+
+            byte[] ir1 = new byte[18];
+            byte[] ir2 = new byte[18];
+
+            for (int x = 0; x < 18; x++)
+            {
+                ir1[x] = InterleavedDataBuffer[x + 3];
+                ir2[x] = data[x + 3];
+            }
+
+            Ir.InterpretDataInterleaved(ir1, ir2);
+            Accel.InterpretDataInterleaved(InterleavedDataBuffer, data);
+        }
+        else
+        {
+            ExpectingSecondInterleavedPacket = true;
+            InterleavedDataBuffer = data;
+        }
     }
 
     /// The size, in bytes, of a given Wii Remote InputDataType when reported by the Wiimote.

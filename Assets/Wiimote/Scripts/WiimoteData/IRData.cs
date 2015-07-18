@@ -8,15 +8,18 @@ namespace WiimoteApi
         /// \brief Size: 4x3.  Current Wii Remote RAW IR data.  Wii Remote IR data can
         ///        detect up to four IR dots.  Data = -1 if it is inapplicable (for
         ///        example, if there are less than four dots, or if size data is
-        ///        unavailable).
+        ///        unavailable due to the selected IRDataType).
         ///
         /// This is only updated if the Wii Remote has a report mode with IR
         ///
-        ///        | Position X | Position Y |  Size  |
-        /// Range: |  0 - 1023  |  0 - 767   | 0 - 15 |
-        /// Index: |     0      |      1     |   2    |
+        ///        | Position X | Position Y |  Size  |  X min  |  Y min  |  X max  |  Y max  | Intensity
+        /// ------ | ---------- | ---------- | ------ | ------- | ------- | ------- | ------- | ---------
+        /// Range: |  0 - 1023  |  0 - 767   | 0 - 15 | 0 - 127 | 0 - 127 | 0 - 127 | 0 - 127 |  0 - 256
+        /// Index: |     0      |      1     |   2    |    3    |    4    |    5    |    6    |     7
         ///
-        /// int[dot index, x (0) / y (1) / size (2)]
+        /// int[dot index, x (0) / y (1) / size (2) / xmin (3) / ymin (4) / xmax (5) / ymax (6) / intensity (7)]
+        /// 
+        /// \sa IRDataType, Wiimote::SetupIRCamera(IRDataType)
         public ReadOnlyMatrix<int> ir { get { return _ir_readonly; } }
         private ReadOnlyMatrix<int> _ir_readonly;
         private int[,] _ir;
@@ -24,7 +27,7 @@ namespace WiimoteApi
         public IRData(Wiimote Owner)
             : base(Owner)
         {
-            _ir = new int[4, 3];
+            _ir = new int[4, 8];
             _ir_readonly = new ReadOnlyMatrix<int>(_ir);
         }
 
@@ -43,6 +46,55 @@ namespace WiimoteApi
             }
         }
 
+        /// \brief Interprets raw byte data reported by the Wii Remote when in interleaved data reporting mode.
+        ///        The format of the actual bytes passed to this depends on the Wii Remote's current data report
+        ///        mode and the type of data being passed.
+        /// 
+        /// \sa Wiimote::ReadWiimoteData()
+        public bool InterpretDataInterleaved(byte[] data1, byte[] data2)
+        {
+            if (data1 == null || data2 == null || data1.Length != 18 || data2.Length != 18)
+                return false;
+
+            byte[] subset = new byte[9];
+            int[] res;
+
+            for (int x = 0; x < 4; x++) {
+                int index = x * 9;
+                byte[] data = index >= 18 ? data1 : data2;
+                index %= 18;
+
+                for (int y = index; y < index + 9; y++)
+                    subset[y - index] = data[y];
+
+                res = InterpretDataInterleaved_Subset(subset);
+
+                for (int y = 0; y < 8; y++)
+                    _ir[x, y] = res[y];
+            }
+
+            return true;
+        }
+
+        private int[] InterpretDataInterleaved_Subset(byte[] data)
+        {
+            if (data.Length != 9) return new int[] { -1, -1, -1, -1, -1, -1, -1, -1 };
+            if (data[0] == 0xff && data[1] == 0xff && data[2] == 0xff) return new int[] { -1, -1, -1, -1, -1, -1, -1, -1 };
+
+            int x = data[0];
+            x |= ((int)(data[2] & 0x30)) << 4;
+            int y = data[1];
+            y |= ((int)(data[2] & 0xc0)) << 2;
+            int size = data[2] & 0x0f;
+            int xmin = data[3];
+            int ymin = data[4];
+            int xmax = data[5];
+            int ymax = data[6];
+            int inten = data[7];
+
+            return new int[] { x, y, size, xmin, ymin, xmax, ymax, inten };
+        }
+
         private void InterpretIRData10(byte[] data)
         {
             if (data.Length != 10) return;
@@ -51,19 +103,20 @@ namespace WiimoteApi
             for (int x = 0; x < 5; x++) half[x] = data[x];
             int[,] subset = InterperetIRData10_Subset(half);
             for (int x = 0; x < 2; x++)
-                for (int y = 0; y < 3; y++)
+                for (int y = 0; y < 8; y++)
                     _ir[x, y] = subset[x, y];
 
             for (int x = 0; x < 5; x++) half[x] = data[x + 5];
             subset = InterperetIRData10_Subset(half);
             for (int x = 0; x < 2; x++)
-                for (int y = 0; y < 3; y++)
+                for (int y = 0; y < 8; y++)
                     _ir[x + 2, y] = subset[x, y];
         }
 
         private int[,] InterperetIRData10_Subset(byte[] data)
         {
-            if (data.Length != 5) return new int[,] { { -1, -1, -1 }, { -1, -1, -1 } };
+            if (data.Length != 5) return new int[,] {{-1, -1, -1, -1, -1, -1, -1, -1},
+                                                     {-1, -1, -1, -1, -1, -1, -1, -1}};
 
             int x1 = data[0];
             x1 |= ((int)(data[2] & 0x30)) << 4;
@@ -87,7 +140,8 @@ namespace WiimoteApi
                 y2 = -1;
             }
 
-            return new int[,] { { x1, y1, -1 }, { x2, y2, -1 } };
+            return new int[,] { { x1, y1, -1, -1, -1, -1, -1, -1 },
+                                { x2, y2, -1, -1, -1, -1, -1, -1 }};
         }
 
         private void InterpretIRData12(byte[] data)
@@ -99,16 +153,15 @@ namespace WiimoteApi
                 byte[] subset = new byte[] { data[i], data[i + 1], data[i + 2] };
                 int[] calc = InterpretIRData12_Subset(subset);
 
-                _ir[x, 0] = calc[0];
-                _ir[x, 1] = calc[1];
-                _ir[x, 2] = calc[2];
+                for (int y = 0; y < 8; y++)
+                    _ir[x, y] = calc[y];
             }
         }
 
         private int[] InterpretIRData12_Subset(byte[] data)
         {
-            if (data.Length != 3) return new int[] { -1, -1, -1 };
-            if (data[0] == 0xff && data[1] == 0xff && data[2] == 0xff) return new int[] { -1, -1, -1 };
+            if (data.Length != 3) return new int[] { -1, -1, -1, -1, -1, -1, -1, -1 };
+            if (data[0] == 0xff && data[1] == 0xff && data[2] == 0xff) return new int[] { -1, -1, -1, -1, -1, -1, -1, -1 };
 
             int x = data[0];
             x |= ((int)(data[2] & 0x30)) << 4;
@@ -116,7 +169,7 @@ namespace WiimoteApi
             y |= ((int)(data[2] & 0xc0)) << 2;
             int size = data[2] & 0x0f;
 
-            return new int[] { x, y, size };
+            return new int[] { x, y, size, -1, -1, -1, -1, -1 };
         }
 
         /// \brief Size: 2.  Returns the position at which the Wii Remote is pointing to.  This is a value from 0-1
@@ -169,8 +222,8 @@ namespace WiimoteApi
         /// \param predict If true, and one of the dots is outside of the Wii Remote's field of view,
         ///                WiimoteApi will attempt to predict the other dot's position outside of the screen (default true).
         /// \return First Dimension: Index of detected IR dot.
-        ///         Second Dimension: 0: X, 1: Y
-        ///         Size: 2x2
+        ///         Second Dimension: 0: X, 1: Y, 2: Index in \link ir (or -1 if predicted)
+        ///         Size: 2x3
         ///         Range: 0-1 with respect to the Wii Remote Camera dimensions.  If \c predict is true this may be outside of that range.
         public float[,] GetProbableSensorBarIR(bool predict = true)
         {
@@ -204,7 +257,7 @@ namespace WiimoteApi
 
             if (SensorBarIndices[0] != -1 && SensorBarIndices[1] != -1)
             {
-                float[,] ret = new float[2, 2];
+                float[,] ret = new float[2, 3];
                 for (int x = 0; x < 2; x++)
                 {
                     for (int y = 0; y < 2; y++)
@@ -213,18 +266,23 @@ namespace WiimoteApi
                     }
                 }
 
+                ret[0, 2] = SensorBarIndices[0];
+                ret[1, 2] = SensorBarIndices[1];
+
                 LastIRSeparation[0] = ret[1, 0] - ret[0, 0];
                 LastIRSeparation[1] = ret[1, 1] - ret[0, 1];
 
                 return ret;
             } else if (predict && SensorBarIndices[0] != -1) // We have enought data to predict (1 dot) and predicting was requested
             {
-                float[,] ret = new float[2, 2];
+                float[,] ret = new float[2, 3];
                 ret[0, 0] = _ir[SensorBarIndices[0], 0];
                 ret[0, 1] = _ir[SensorBarIndices[0], 1];
+                ret[0, 2] = SensorBarIndices[0];
 
                 ret[1, 0] = ret[0, 0] + LastIRSeparation[0];
                 ret[1, 1] = ret[0, 1] + LastIRSeparation[1];
+                ret[1, 2] = -1;
 
                 return ret;
             } else // We don't have enough data
@@ -232,7 +290,7 @@ namespace WiimoteApi
                 LastIRSeparation[0] = 0;
                 LastIRSeparation[1] = 0;
 
-                return new float[,] { { -1, -1 }, { -1, -1 } };
+                return new float[,] { { -1, -1, -1 }, { -1, -1, -1 } };
             }
         }
     }

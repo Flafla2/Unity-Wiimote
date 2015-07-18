@@ -53,13 +53,11 @@ public enum InputDataType
     REPORT_BUTTONS_ACCEL_IR10_EXT6 = 0x37,
     /// Data Report Mode: 21 Extension Bytes
     REPORT_EXT21 = 0x3d,
-    /// \brief Data Report Mode: Interleaved (First half) Buttons, Accelerometer, 36 IR Bytes (IRDataType::FULL)
-    /// \warning Interleaved data reporting is currently not supported.  If you would like to use this you have to
-    ///          implement it yourself.
+    /// Data Report Mode: (Interleaved) Buttons, Accelerometer, 36 IR Bytes (IRDataType::FULL)
     REPORT_INTERLEAVED = 0x3e,
-    /// Data Report Mode: Interleaved (Second half) Buttons, Accelerometer, 36 IR Bytes (IRDataType::FULL)
-    /// \warning Interleaved data reporting is currently not supported.  If you would like to use this you have to
-    ///          implement it yourself.
+    /// Data Report Mode: (Interleaved) Buttons, Accelerometer, 36 IR Bytes (IRDataType::FULL) Alternate
+    /// 
+    /// \note This is functionally identical to REPORT_INTERLEAVED.
     REPORT_INTERLEAVED_ALT = 0x3f
 }
 

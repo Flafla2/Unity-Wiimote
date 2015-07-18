@@ -12,7 +12,7 @@ namespace WiimoteApi
             this.Owner = Owner;
         }
 
-        /// \brief Interprets raw byte data reported by the Wii Remote.  The indeces of the actual bytes
+        /// \brief Interprets raw byte data reported by the Wii Remote.  The format of the actual bytes
         ///        passed to this depends on the Wii Remote's current data report mode and the type
         ///        of data being passed.
         /// \sa Wiimote::ReadWiimoteData()
