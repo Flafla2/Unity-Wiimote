@@ -55,6 +55,7 @@ namespace WiimoteApi
             _accel[2] = ((int)data[4] << 2) | ((data[1] >> 5) & 0xf0);
 
             for (int x = 0; x < 3; x++) _accel[x] -= 0x200; // center around zero.
+            
             return true;
         }
 
@@ -70,10 +71,10 @@ namespace WiimoteApi
 
             _accel[0] = (int)data1[2] << 2;
             _accel[1] = (int)data2[2] << 2;
-            _accel[2] = ((data1[1] & 0x60) << 1) | 
-                ((data1[0] & 0x60) >> 1) | 
-                ((data2[1] & 0x60) >> 3) | 
-                ((data2[0] & 0x60) >> 5);
+            _accel[2] =   (int)(((data1[0] & 0x60) >> 1) | 
+                                ((data1[1] & 0x60) << 1) | 
+                                ((data2[0] & 0x60) >> 5) | 
+                                ((data2[1] & 0x60) >> 3)) << 2;
 
             for (int x = 0; x < 3; x++) _accel[x] -= 0x200; // center around zero.
 

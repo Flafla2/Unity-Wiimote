@@ -3,6 +3,10 @@
     {
         /// The rotational velocity in the Pitch direction of the Wii Remote, as
         /// reported by the Wii Motion Plus.  Measured in degrees per second.
+        ///
+        /// \note The Wii Remote sends updates at a frequency of 100Hz.  So, one way
+        ///       of finding the change in degrees over the previous report is to multiply
+        ///       this value by 0.01.
         public float PitchSpeed { get { return _PitchSpeed; } }
         private float _PitchSpeed = 0;
 
@@ -10,6 +14,10 @@
 
         /// The rotational velocity in the Yaw direction of the Wii Remote, as
         /// reported by the Wii Motion Plus.  Measured in degrees per second.
+        ///
+        /// \note The Wii Remote sends updates at a frequency of 100Hz.  So, one way
+        ///       of finding the change in degrees over the previous report is to multiply
+        ///       this value by 0.01.
         public float YawSpeed { get { return _YawSpeed; } }
         private float _YawSpeed = 0;
 
@@ -17,6 +25,10 @@
 
         /// The rotational velocity in the Roll direction of the Wii Remote, as
         /// reported by the Wii Motion Plus.  Measured in degrees per second.
+        ///
+        /// \note The Wii Remote sends updates at a frequency of 100Hz.  So, one way
+        ///       of finding the change in degrees over the previous report is to multiply
+        ///       this value by 0.01.
         public float RollSpeed { get { return _RollSpeed; } }
         private float _RollSpeed;
 
