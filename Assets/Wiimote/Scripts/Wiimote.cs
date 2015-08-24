@@ -617,9 +617,13 @@ public class Wiimote
 
                 byte size = (byte)((data[2] >> 4) + 0x01);
                 byte error = (byte)(data[2] & 0x0f);
+                // Error 0x07 means reading from a write-only register
+                // Offset 0xa600fa is for the Wii Motion Plus.  This error code can be expected behavior in this case.
                 if (error == 0x07)
                 {
-                    Debug.LogError("Wiimote reports Read Register error 7: Attempting to read from a write-only register ("+CurrentReadData.Offset.ToString("x")+").  Aborting read.");
+                    if(CurrentReadData.Offset != 0xa600fa)
+                        Debug.LogError("Wiimote reports Read Register error 7: Attempting to read from a write-only register ("+CurrentReadData.Offset.ToString("x")+").  Aborting read.");
+
                     CurrentReadData = null;
                     return status;
                 }
@@ -745,41 +749,48 @@ public class Wiimote
                     _Extension.InterpretData(ext);
                 break;
             case InputDataType.REPORT_INTERLEAVED:
-                ReadInterleaved(data);
+                if (!ExpectingSecondInterleavedPacket)
+                {
+                    ExpectingSecondInterleavedPacket = true;
+                    InterleavedDataBuffer = data;
+                } else if(WiimoteManager.Debug_Messages) {
+                    Debug.LogWarning(
+                        "Recieved two REPORT_INTERLEAVED ("+InputDataType.REPORT_INTERLEAVED.ToString("x")+") reports in a row!  "
+                        + "Expected REPORT_INTERLEAVED_ALT ("+InputDataType.REPORT_INTERLEAVED_ALT.ToString("x")+").  Ignoring!"
+                    );
+                }
+                
                 break;
             case InputDataType.REPORT_INTERLEAVED_ALT:
-                ReadInterleaved(data);
+                if (ExpectingSecondInterleavedPacket)
+                {
+                    ExpectingSecondInterleavedPacket = false;
+
+                    buttons = new byte[] { data[0], data[1] };
+                    Button.InterpretData(buttons);
+
+                    byte[] ir1 = new byte[18];
+                    byte[] ir2 = new byte[18];
+
+                    for (int x = 0; x < 18; x++)
+                    {
+                        ir1[x] = InterleavedDataBuffer[x + 3];
+                        ir2[x] = data[x + 3];
+                    }
+
+                    Ir.InterpretDataInterleaved(ir1, ir2);
+                    Accel.InterpretDataInterleaved(InterleavedDataBuffer, data);
+                }
+                else if(WiimoteManager.Debug_Messages)
+                {
+                    Debug.LogWarning(
+                        "Recieved two REPORT_INTERLEAVED_ALT ("+InputDataType.REPORT_INTERLEAVED_ALT.ToString("x")+") reports in a row!  "
+                        + "Expected REPORT_INTERLEAVED ("+InputDataType.REPORT_INTERLEAVED.ToString("x")+").  Ignoring!"
+                    );
+                }
                 break;
         }
         return status;
-    }
-
-    private void ReadInterleaved(byte[] data)
-    {
-        if (ExpectingSecondInterleavedPacket)
-        {
-            ExpectingSecondInterleavedPacket = false;
-
-            byte[] buttons = new byte[] { data[0], data[1] };
-            Button.InterpretData(buttons);
-
-            byte[] ir1 = new byte[18];
-            byte[] ir2 = new byte[18];
-
-            for (int x = 0; x < 18; x++)
-            {
-                ir1[x] = InterleavedDataBuffer[x + 3];
-                ir2[x] = data[x + 3];
-            }
-
-            Ir.InterpretDataInterleaved(ir1, ir2);
-            Accel.InterpretDataInterleaved(InterleavedDataBuffer, data);
-        }
-        else
-        {
-            ExpectingSecondInterleavedPacket = true;
-            InterleavedDataBuffer = data;
-        }
     }
 
     /// The size, in bytes, of a given Wii Remote InputDataType when reported by the Wiimote.
