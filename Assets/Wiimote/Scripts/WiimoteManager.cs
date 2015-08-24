@@ -17,7 +17,7 @@ public class WiimoteManager
 
     /// A list of all currently connected Wii Remotes.
     public static List<Wiimote> Wiimotes { get { return _Wiimotes; } }
-    public static List<Wiimote> _Wiimotes = new List<Wiimote>();
+    private static List<Wiimote> _Wiimotes = new List<Wiimote>();
 
     /// If true, WiimoteManager and Wiimote will write data reports and other debug
     /// messages to the console.  Any incorrect usages / errors will still be reported.
@@ -29,7 +29,6 @@ public class WiimoteManager
     /// If you attempt to write at a rate faster than this, the extra write requests will
     /// be queued up and written to the Wii Remote after the delay is up.
     public static int MaxWriteFrequency = 20; // In ms
-    private static float LastWriteTime = 0;
     private static Queue<WriteQueueData> WriteQueue;
 
     // ------------- RAW HIDAPI INTERFACE ------------- //
@@ -91,7 +90,9 @@ public class WiimoteManager
             if (remote == null)
             {
                 IntPtr handle = HIDapi.hid_open_path(enumerate.path);
+
                 remote = new Wiimote(handle, enumerate.path, type);
+
                 if (Debug_Messages)
                     Debug.Log("Found New Remote: " + remote.hidapi_path);
 

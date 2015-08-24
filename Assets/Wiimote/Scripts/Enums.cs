@@ -53,13 +53,11 @@ public enum InputDataType
     REPORT_BUTTONS_ACCEL_IR10_EXT6 = 0x37,
     /// Data Report Mode: 21 Extension Bytes
     REPORT_EXT21 = 0x3d,
-    /// \brief Data Report Mode: Interleaved (First half) Buttons, Accelerometer, 36 IR Bytes (IRDataType::FULL)
-    /// \warning Interleaved data reporting is currently not supported.  If you would like to use this you have to
-    ///          implement it yourself.
+    /// Data Report Mode: (Interleaved) Buttons, Accelerometer, 36 IR Bytes (IRDataType::FULL)
     REPORT_INTERLEAVED = 0x3e,
-    /// Data Report Mode: Interleaved (Second half) Buttons, Accelerometer, 36 IR Bytes (IRDataType::FULL)
-    /// \warning Interleaved data reporting is currently not supported.  If you would like to use this you have to
-    ///          implement it yourself.
+    /// Data Report Mode: (Interleaved) Buttons, Accelerometer, 36 IR Bytes (IRDataType::FULL) Alternate
+    /// 
+    /// \note This is functionally identical to REPORT_INTERLEAVED.
     REPORT_INTERLEAVED_ALT = 0x3f
 }
 
@@ -87,7 +85,22 @@ public enum IRDataType
 
 public enum ExtensionController
 {
-    NONE, NUNCHUCK, CLASSIC, CLASSIC_PRO, MOTIONPLUS, MOTIONPLUS_NUNCHUCK, MOTIONPLUS_CLASSIC
+    /// No Extension Controller is connected.
+    NONE, 
+    /// A Nunchuck Controller
+    NUNCHUCK, 
+    /// A Classic Controller
+    CLASSIC, 
+    /// A Classic Controller Pro.  This is functionally identical to a classic controller.
+    CLASSIC_PRO, 
+    /// An activated Wii Motion Plus with no extension controllers in passthrough mode.
+    MOTIONPLUS, 
+    /// An activated Wii Motion Plus with a Nunchuck in passthrough mode.
+    /// \warning Nunchuck passthrough is currently not supported.
+    MOTIONPLUS_NUNCHUCK, 
+    /// An activated Wii Motion Plus with a Classic Controller in passthrough mode. 
+    /// \warning Classic Controller passthrough is currently not supported
+    MOTIONPLUS_CLASSIC
 }
 
 public enum AccelCalibrationStep {

@@ -46,7 +46,7 @@ Future Changes
 While the API is very powerful already, I would still like to make changes to it to improve it even more.  Namely I would
 like to:
 
-- Add support for all common extension controllers (Classic Controller / Pro, extend finish Wii Motion Plus support)
+- Add support for all common extension controllers (Guitar Hero Controller, Wii U Pro Controller)
     - Add support for Nunchuck passthrough / Classic Controller passthrough mode on the Wii Motion Plus
 - Add speaker support (no small feat!)
 

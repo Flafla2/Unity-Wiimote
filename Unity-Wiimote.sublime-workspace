@@ -7,6 +7,14 @@
 	},
 	"buffers":
 	[
+		{
+			"file": "/C/Users/Adrian/Downloads/wiic/src/wiic/motionplus.c",
+			"settings":
+			{
+				"buffer_size": 6569,
+				"line_ending": "Unix"
+			}
+		}
 	],
 	"build_system": "",
 	"build_system_choices":
@@ -45,13 +53,19 @@
 	},
 	"expanded_folders":
 	[
-		"/Users/Adrian/Documents/GitHub/Unity-Wiimote",
-		"/Users/Adrian/Documents/GitHub/Unity-Wiimote/Assets",
-		"/Users/Adrian/Documents/GitHub/Unity-Wiimote/Assets/Wiimote",
-		"/Users/Adrian/Documents/GitHub/Unity-Wiimote/Assets/Wiimote/Scripts"
+		"/C/Users/Adrian/Documents/Random Unity Projects/Wiimote-Unity",
+		"/C/Users/Adrian/Documents/Random Unity Projects/Wiimote-Unity/Assets",
+		"/C/Users/Adrian/Documents/Random Unity Projects/Wiimote-Unity/Assets/Art",
+		"/C/Users/Adrian/Documents/Random Unity Projects/Wiimote-Unity/Assets/Wiimote",
+		"/C/Users/Adrian/Documents/Random Unity Projects/Wiimote-Unity/hidapi-modified"
 	],
 	"file_history":
 	[
+		"/C/Users/Adrian/AppData/Roaming/Sublime Text 3/Packages/User/Preferences.sublime-settings",
+		"/C/Users/Adrian/Documents/Random Unity Projects/Wiimote-Unity/hidapi-modified/hid-windows.c",
+		"/C/Users/Adrian/Documents/Random Unity Projects/Wiimote-Unity/LICENSE.txt",
+		"/C/Users/Adrian/Documents/Random Unity Projects/Wiimote-Unity/README.md",
+		"/C/Users/Adrian/Documents/Random Unity Projects/Wiimote-Unity/Unity-Wiimote.sublime-project",
 		"/Users/Adrian/Documents/GitHub/Unity-Wiimote/Assets/Wiimote/Scripts/WiimoteManager.cs",
 		"/Users/Adrian/Library/Application Support/Sublime Text 3/Packages/Default/Preferences.sublime-settings",
 		"/Users/Adrian/Library/Application Support/Sublime Text 3/Packages/User/Preferences.sublime-settings",
@@ -98,8 +112,38 @@
 	"groups":
 	[
 		{
+			"selected": 0,
 			"sheets":
 			[
+				{
+					"buffer": 0,
+					"file": "/C/Users/Adrian/Downloads/wiic/src/wiic/motionplus.c",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 6569,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3052,
+								3052
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": -0.0,
+						"translation.y": 624.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				}
 			]
 		}
 	],
