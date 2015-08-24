@@ -50,8 +50,8 @@ namespace WiimoteApi {
             _accel[1] = (int)data[3] << 2; _accel[1] |= (data[5] & 0x30) >> 4;
             _accel[2] = (int)data[4] << 2; _accel[2] |= (data[5] & 0x0c) >> 2;
 
-            _c = (data[5] & 0x02) == 0x02;
-            _z = (data[5] & 0x01) == 0x01;
+            _c = (data[5] & 0x02) != 0x02;
+            _z = (data[5] & 0x01) != 0x01;
             return true;
         }
 
