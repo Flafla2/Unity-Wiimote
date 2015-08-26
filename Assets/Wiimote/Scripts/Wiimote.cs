@@ -58,6 +58,14 @@ public class Wiimote
         }
     }
 
+    public WiiUProData WiiUPro {
+        get {
+            if(current_ext == ExtensionController.WIIU_PRO)
+                return (WiiUProData)_Extension;
+            return null;
+        }
+    }
+
     private WiimoteData _Extension;
 
     /// Button data component.
@@ -74,6 +82,11 @@ public class Wiimote
     /// Wii Remote.  Use this when interfacing directly with HIDApi.
     public IntPtr hidapi_handle { get { return _hidapi_handle; } }
     private IntPtr _hidapi_handle = IntPtr.Zero;
+
+    /// The RAW (unprocessesed) extension data reported by the Wii Remote.  This could
+    /// be used for debugging new / undocumented extension controllers.
+    public ReadOnlyArray<byte> RawExtension { get { return _RawExtension; } }
+    private ReadOnlyArray<byte> _RawExtension = null;
 
     /// The low-level bluetooth HID path of this Wii Remote.  Use this
     /// when interfacing directly with HIDApi.
@@ -136,9 +149,9 @@ public class Wiimote
             return;
         }
 
-        if (data[0] == 0x01)        // This is a weird inconsistency with some Wii Remote Pluses.  They don't have the -TR suffix
-            _wiimoteplus = true;    // or a different PID as an identifier.  Instead they have a different WMP extension identifier.
-                                    // It occurs on some of the oldest Wii Remote Pluses available (pre-2012).
+        if (data[0] == 0x01)                    // This is a weird inconsistency with some Wii Remote Pluses.  They don't have the -TR suffix
+            _Type = WiimoteType.WIIMOTEPLUS;    // or a different PID as an identifier.  Instead they have a different WMP extension identifier.
+                                                // It occurs on some of the oldest Wii Remote Pluses available (pre-2012).
 
         for (int x = 0; x < data.Length; x++)
         {
@@ -162,6 +175,7 @@ public class Wiimote
     private const long ID_Nunchuck                  = 0x0000A4200000;
     private const long ID_Classic                   = 0x0000A4200101;
     private const long ID_ClassicPro                = 0x0100A4200101;
+    private const long ID_WiiUPro                   = 0x0000A4200120;
 
 
     private void RespondIdentifyExtension(byte[] data)
@@ -205,17 +219,27 @@ public class Wiimote
         else if (val == ID_Classic)
         {
             _current_ext = ExtensionController.CLASSIC;
-            ActivateExtension();
             if (_Extension == null || _Extension.GetType() != typeof(ClassicControllerData))
                 _Extension = new ClassicControllerData(this);
         }
+        else if (val == ID_WiiUPro)
+        {
+            _current_ext = ExtensionController.WIIU_PRO;
+            _Type = WiimoteType.PROCONTROLLER;
+            if (_Extension == null || _Extension.GetType() != typeof(WiiUProData))
+                _Extension = new WiiUProData(this);
+        }
         else
         {
+            Debug.Log(val.ToString("X12"));
             _current_ext = ExtensionController.NONE;
             _Extension = null;
         }
 
-        if(current_ext != ExtensionController.MOTIONPLUS && current_ext != ExtensionController.MOTIONPLUS_CLASSIC && current_ext != ExtensionController.MOTIONPLUS_NUNCHUCK)
+        if(current_ext != ExtensionController.MOTIONPLUS && 
+            current_ext != ExtensionController.MOTIONPLUS_CLASSIC && 
+            current_ext != ExtensionController.MOTIONPLUS_NUNCHUCK &&
+            current_ext != ExtensionController.WIIU_PRO)
             ActivateExtension();
     }
 
@@ -568,7 +592,7 @@ public class Wiimote
         // Variable names used throughout the switch/case block
         byte[] buttons;
         byte[] accel;
-        byte[] ext;
+        byte[] ext = null;
         byte[] ir;
 
         switch ((InputDataType)buf[0]) // buf[0] is the output ID byte
@@ -793,13 +817,19 @@ public class Wiimote
                 }
                 break;
         }
+
+        if(ext == null)
+            _RawExtension = null;
+        else
+            _RawExtension = new ReadOnlyArray<byte>(ext);
+
         return status;
     }
 
     /// The size, in bytes, of a given Wii Remote InputDataType when reported by the Wiimote.
     ///
     /// This is at most 21 bytes.
-    public int GetInputDataTypeSize(InputDataType type)
+    public static int GetInputDataTypeSize(InputDataType type)
     {
         switch (type)
         {
