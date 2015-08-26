@@ -69,7 +69,7 @@
         // any better in the future.  Realistically this value is the result of the Analog/Digital converter
         // in the Wii Motion Plus along with the analog output of the gyros, but the documentation is so
         // shitty that I don't even care anymore.
-        private const float MagicCalibrationConstant = 0.02179f;
+        private const float MagicCalibrationConstant = 0.03076f;
 
         public MotionPlusData(Wiimote Owner) : base(Owner) { }
 
