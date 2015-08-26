@@ -91,10 +91,13 @@ public enum ExtensionController
     NUNCHUCK, 
     /// A Classic Controller
     CLASSIC, 
-    /// A Classic Controller Pro.  This is functionally identical to a classic controller.
-    CLASSIC_PRO, 
+    /// A Classic Controller Pro.
+    CLASSIC_PRO,
+    /// A Wii U Pro Controller.  Although a Wii U Pro Controller is not technically an extension controller it is treated
+    /// like one when communicating to a bluetooth host.
+    WIIU_PRO, 
     /// An activated Wii Motion Plus with no extension controllers in passthrough mode.
-    MOTIONPLUS, 
+    MOTIONPLUS,
     /// An activated Wii Motion Plus with a Nunchuck in passthrough mode.
     /// \warning Nunchuck passthrough is currently not supported.
     MOTIONPLUS_NUNCHUCK, 

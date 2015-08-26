@@ -6,6 +6,11 @@
     {
         private T[] _data;
 
+        public int Length
+        {
+            get { return _data.Length; }
+        }
+
         public ReadOnlyArray(T[] data)
         {
             _data = data;
@@ -37,6 +42,11 @@
             {
                 return _data[x, y];
             }
+        }
+
+        /// Returns the length of this array in the given dimension.
+        public int GetLength(int dim) {
+            return _data.GetLength(dim);
         }
     }
 }

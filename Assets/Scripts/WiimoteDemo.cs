@@ -23,10 +23,8 @@ public class WiimoteDemo : MonoBehaviour {
 
     void Start() {
         initial_rotation = model.rot.localRotation;
-
-        WiimoteManager.Debug_Messages = true;
     }
-    
+
 	void Update () {
         if (!WiimoteManager.HasWiimote()) { return; }
 
@@ -148,7 +146,7 @@ public class WiimoteDemo : MonoBehaviour {
         GUILayout.Label("WMP Attached: " + wiimote.wmp_attached);
         if (GUILayout.Button("Request Identify WMP"))
             wiimote.RequestIdentifyWiiMotionPlus();
-        if ((wiimote.wmp_attached || wiimote.wiimoteplus) && GUILayout.Button("Activate WMP"))
+        if ((wiimote.wmp_attached || wiimote.Type == WiimoteType.PROCONTROLLER) && GUILayout.Button("Activate WMP"))
             wiimote.ActivateWiiMotionPlus();
 
         GUILayout.Label("Calibrate Accelerometer");
@@ -226,6 +224,31 @@ public class WiimoteDemo : MonoBehaviour {
                     wmpOffset = Vector3.zero;
                 }
                 GUILayout.Label("Offset: " + wmpOffset.ToString());
+            }
+            else if (wiimote.current_ext == ExtensionController.WIIU_PRO)
+            {
+                GUILayout.Label("Wii U Pro Controller:", bold);
+                WiiUProData data = wiimote.WiiUPro;
+                GUILayout.Label("Stick Left: "+data.lstick[0]+", "+data.lstick[1]);
+                GUILayout.Label("Stick Right: "+data.rstick[0]+", "+data.rstick[1]);
+                GUILayout.Label("A: "+data.a);
+                GUILayout.Label("B: "+data.b);
+                GUILayout.Label("X: "+data.x);
+                GUILayout.Label("Y: "+data.y);
+
+                GUILayout.Label("D-Up: "   +data.dpad_up);
+                GUILayout.Label("D-Down: " +data.dpad_down);
+                GUILayout.Label("D-Left: " +data.dpad_left);
+                GUILayout.Label("D-Right: "+data.dpad_right);
+
+                GUILayout.Label("Plus: "+data.plus);
+                GUILayout.Label("Minus: "+data.minus);
+                GUILayout.Label("Home: "+data.home);
+
+                GUILayout.Label("L: "+data.l);
+                GUILayout.Label("R: "+data.r);
+                GUILayout.Label("ZL: "+data.zl);
+                GUILayout.Label("ZR: "+data.zr);
             }
             GUILayout.EndScrollView();
         } else {
