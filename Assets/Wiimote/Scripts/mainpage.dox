@@ -198,6 +198,7 @@ Controller           | WiimoteApi::ExtensionController Enum | WiimoteApi::Wiimot
 Nunchuck             | NUNCHUCK                             | WiimoteApi::Wiimote::Nunchuck
 Classic Controller   | CLASSIC                              | WiimoteApi::Wiimote::ClassicController
 Wii Motion Plus      | MOTIONPLUS                           | WiimoteApi::Wiimote::MotionPlus
+Wii U Pro Controller | PROCONTROLLER						| WiimoteApi::Wiimote::WiiUPro
 
 \warning Keep in mind that a Wii Motion Plus *must* be activated (see *Wii Motion Plus / Wii Remote Plus* above)
 		 in order for the Wii Remote to begin reporting Wii Motion Plus data.
@@ -208,6 +209,25 @@ void Update(Wiimote remote) { // Called every frame (for example)
 	if(remote.current_ext == ExtensionController.NUNCHUCK) {
 		NunchuckData data = remote.Nunchuck;
 		float[] stick = data.GetStick01(); // Position of the joystick
+
+		// do stuff...
+	}
+}
+~~~~~~~~~~~~~~~
+
+\subsubsection wiiupro Wii U Pro Controller
+
+The Wii U Pro Controller uses the same communication protocol as the Wii Remote, and acts as a Wii Remote with a special extension controller.  As such, WiimoteApi treats the Wii U Pro Controller as a Wii Remote with a Wii U Pro Controller extension.  Because of this accessing the Pro Controller is the same as accessing any other extension.  You can also use WiimoteApi::Wiimote::Type to confirm that the connected controller is a Pro Controller (if so it will be WiimoteType.PROCONTROLLER).
+
+<b>Example:</b>
+~~~~~~~~~~~~~~~{.cs}
+void Update(Wiimote remote) { // Called every frame (for example)
+	if(remote.current_ext == ExtensionController.WIIU_PRO)
+	// Alternatively: 
+	// if(remote.Type == WiimoteType.PROCONTROLLER)
+	{
+		WiiUProData data = remote.WiiUPro;
+		float stick = data.GetLeftStick01(); // Position of left joystick
 
 		// do stuff...
 	}
