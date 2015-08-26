@@ -182,7 +182,7 @@ public class WiimoteDemo : MonoBehaviour {
                 GUILayout.Label("Stick: " + data.stick[0] + ", " + data.stick[1]);
                 GUILayout.Label("C: " + data.c);
                 GUILayout.Label("Z: " + data.z);
-            } else if (wiimote.current_ext == ExtensionController.CLASSIC || wiimote.current_ext == ExtensionController.CLASSIC_PRO) {
+            } else if (wiimote.current_ext == ExtensionController.CLASSIC) {
                 GUILayout.Label("Classic Controller:", bold);
                 ClassicControllerData data = wiimote.ClassicController;
                 GUILayout.Label("Stick Left: " + data.lstick[0] + ", " + data.lstick[1]);
@@ -218,7 +218,8 @@ public class WiimoteDemo : MonoBehaviour {
                 if (GUILayout.Button("Zero Out WMP"))
                 {
                     data.SetZeroValues();
-                    model.rot.localRotation = Quaternion.LookRotation(Vector3.right, GetAccelVector());
+                    model.rot.rotation = Quaternion.FromToRotation(model.rot.rotation*GetAccelVector(), Vector3.up) * model.rot.rotation;
+                    model.rot.rotation = Quaternion.FromToRotation(model.rot.forward, Vector3.forward) * model.rot.rotation;
                 }
                 if(GUILayout.Button("Reset Offset"))
                     wmpOffset = Vector3.zero;
