@@ -11,8 +11,6 @@ public class WiimoteDemo : MonoBehaviour {
     public RectTransform[] ir_bb;
     public RectTransform ir_pointer;
 
-    public bool UseCalibratedAccel = true;
-
     private Quaternion initial_rotation;
 
     private Wiimote wiimote;
@@ -272,21 +270,12 @@ public class WiimoteDemo : MonoBehaviour {
         float accel_y;
         float accel_z;
 
-        if (UseCalibratedAccel)
-        {
-            float[] accel = wiimote.Accel.GetCalibratedAccelData();
-            accel_x = -accel[0];
-            accel_y = accel[2];
-            accel_z = -accel[1];
-        }
-        else
-        {
-            accel_x = -(float)wiimote.Accel.accel[0] / 128f;
-            accel_y = (float)wiimote.Accel.accel[2] / 128f;
-            accel_z = -(float)wiimote.Accel.accel[1] / 128f;
-        }
+        float[] accel = wiimote.Accel.GetCalibratedAccelData();
+        accel_x = accel[0];
+        accel_y = -accel[2];
+        accel_z = -accel[1];
 
-        return new Vector3(accel_x, -accel_y, accel_z);
+        return new Vector3(accel_x, accel_y, accel_z).normalized;
     }
 
     [System.Serializable]

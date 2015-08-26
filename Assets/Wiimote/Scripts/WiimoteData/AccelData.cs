@@ -6,13 +6,14 @@ namespace WiimoteApi
     public class AccelData : WiimoteData
     {
         /// \brief Current remote-space acceleration, in the Wii Remote's coordinate system.
-        ///        These are RAW values, so they may be off.  See CalibrateAccel().
+        ///        These are RAW values, so they are not with respect to a zero point.  See CalibrateAccel().
         ///        This is only updated if the Wii Remote has a report mode that supports
         ///        the Accelerometer.
         ///
-        /// Range:            -128 to 128
+        /// Range:            0 - 1024
+        /// The sign of the directions below are with respect to the zero point of the accelerometer:
         /// Up/Down:          +Z/-Z
-        /// Left/Right:       +X/-Z
+        /// Left/Right:       +X/-X
         /// Forward/Backward: -Y/+Y
         public ReadOnlyArray<int> accel { get { return _accel_readonly; } }
         private ReadOnlyArray<int> _accel_readonly;
@@ -32,9 +33,9 @@ namespace WiimoteApi
         /// 
         /// int[calibration step,calibration data] (size 3x3)
         public int[,] accel_calib = {
-                                    { -20, -16,  83 },
-                                    { -20,  80, -20 },
-                                    {  84, -20, -12 }
+                                    { 479, 478, 569 },
+                                    { 472, 568, 476 },
+                                    { 569, 469, 476 }
                                 };
 
         public AccelData(Wiimote Owner)
@@ -50,11 +51,11 @@ namespace WiimoteApi
 
             // Note: data[0 - 1] is the buttons data.  data[2 - 4] is the accel data.
             // Accel data and buttons data is interleaved to reduce packet size.
-            _accel[0] = ((int)data[2] << 2) | ((data[0] >> 5) & 0xff);
-            _accel[1] = ((int)data[3] << 2) | ((data[1] >> 4) & 0xf0);
-            _accel[2] = ((int)data[4] << 2) | ((data[1] >> 5) & 0xf0);
+            _accel[0] = ((int)data[2] << 2) | ((data[0] >> 5) & 0x03);
+            _accel[1] = ((int)data[3] << 2) | ((data[1] >> 5) & 0x01);
+            _accel[2] = ((int)data[4] << 2) | ((data[1] >> 6) & 0x01);
 
-            for (int x = 0; x < 3; x++) _accel[x] -= 0x200; // center around zero.
+            //for (int x = 0; x < 3; x++) _accel[x] -= 0x200; // center around zero.
             
             return true;
         }
@@ -76,7 +77,7 @@ namespace WiimoteApi
                                 ((data2[0] & 0x60) >> 5) | 
                                 ((data2[1] & 0x60) >> 3)) << 2;
 
-            for (int x = 0; x < 3; x++) _accel[x] -= 0x200; // center around zero.
+            //for (int x = 0; x < 3; x++) _accel[x] -= 0x200; // center around zero.
 
             return true;
         }
@@ -94,9 +95,11 @@ namespace WiimoteApi
         public float[] GetAccelZeroPoints()
         {
             float[] ret = new float[3];
-            ret[0] = ((float)accel_calib[0, 0] / (float)accel_calib[1, 0]) / 2f;
-            ret[1] = ((float)accel_calib[0, 1] / (float)accel_calib[2, 1]) / 2f;
-            ret[2] = ((float)accel_calib[1, 2] / (float)accel_calib[2, 2]) / 2f;
+            // For each axis, find the two steps that are not affected by gravity on that axis.
+            // average these values together to get a final zero point.
+            ret[0] = ((float)accel_calib[0, 0] + (float)accel_calib[1, 0]) / 2f;
+            ret[1] = ((float)accel_calib[0, 1] + (float)accel_calib[2, 1]) / 2f;
+            ret[2] = ((float)accel_calib[1, 2] + (float)accel_calib[2, 2]) / 2f;
             return ret;
         }
 
@@ -106,7 +109,7 @@ namespace WiimoteApi
         ///
         /// Range: -1 to 1
         /// Up/Down:          +Z/-Z
-        /// Left/Right:       +X/-Z
+        /// Left/Right:       +X/-X
         /// Forward/Backward: -Y/+Y
         public float[] GetCalibratedAccelData()
         {
