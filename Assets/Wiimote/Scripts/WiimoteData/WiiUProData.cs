@@ -4,7 +4,7 @@ using WiimoteApi.Util;
 namespace WiimoteApi {
 	public class WiiUProData : WiimoteData {
 
-		/// Classic Controller left stick analog values.  This is a size-2 array [X,Y]
+		/// Pro Controller left stick analog values.  This is a size-2 array [X,Y]
 		/// of RAW (unprocessed) stick data.  These values are in the range 803-3225
 		/// in the X direction and 843-3291 in the Y direction.
 		///
@@ -16,7 +16,7 @@ namespace WiimoteApi {
 		private ReadOnlyArray<ushort> _lstick_readonly;
 		private ushort[] _lstick;
 
-		/// Classic Controller right stick analog values.  This is a size-2 array [X,Y]
+		/// Pro Controller right stick analog values.  This is a size-2 array [X,Y]
 		/// of RAW (unprocessed) stick data.  These values are in the range 852-3169
 		/// in the X direction and 810-3315 in the Y direction.
 		///
