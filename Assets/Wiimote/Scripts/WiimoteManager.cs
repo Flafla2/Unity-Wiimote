@@ -10,10 +10,8 @@ namespace WiimoteApi {
 public class WiimoteManager
 {
     public const ushort vendor_id_wiimote = 0x057e;
-    public const ushort vendor_id_procontroller = 0x0b6a;
     public const ushort product_id_wiimote = 0x0306;
     public const ushort product_id_wiimoteplus = 0x0330;
-    public const ushort product_id_procontroller = 0xa132;
 
     /// A list of all currently connected Wii Remotes.
     public static List<Wiimote> Wiimotes { get { return _Wiimotes; } }
@@ -39,7 +37,6 @@ public class WiimoteManager
     {
         bool ret = _FindWiimotes(WiimoteType.WIIMOTE);
         ret = ret || _FindWiimotes(WiimoteType.WIIMOTEPLUS);
-        ret = ret || _FindWiimotes(WiimoteType.PROCONTROLLER);
         return ret;
     }
 
@@ -54,12 +51,9 @@ public class WiimoteManager
         if(type == WiimoteType.WIIMOTE) {
             vendor = vendor_id_wiimote;
             product = product_id_wiimote;
-        } else if(type == WiimoteType.WIIMOTEPLUS) {
+        } else if(type == WiimoteType.WIIMOTEPLUS || type == WiimoteType.PROCONTROLLER) {
             vendor = vendor_id_wiimote;
             product = product_id_wiimoteplus;
-        } else if(type == WiimoteType.PROCONTROLLER) {
-            vendor = vendor_id_procontroller;
-            product = product_id_procontroller;
         }
 
         IntPtr ptr = HIDapi.hid_enumerate(vendor, product);
@@ -91,7 +85,14 @@ public class WiimoteManager
             {
                 IntPtr handle = HIDapi.hid_open_path(enumerate.path);
 
-                remote = new Wiimote(handle, enumerate.path, type);
+                WiimoteType trueType = type;
+
+                // Wii U Pro Controllers have the same identifiers as the newer Wii Remote Plus except for product
+                // string (WHY nintendo...)
+                if(enumerate.product_string.EndsWith("UC"))
+                    trueType = WiimoteType.PROCONTROLLER;
+
+                remote = new Wiimote(handle, enumerate.path, trueType);
 
                 if (Debug_Messages)
                     Debug.Log("Found New Remote: " + remote.hidapi_path);

@@ -130,12 +130,6 @@ public class Wiimote
         _Status = new StatusData(this);
         _Extension = null;
 
-        Debug.Log(Type.ToString());
-        if(Type == WiimoteType.PROCONTROLLER) {
-            _current_ext = ExtensionController.CLASSIC;
-            _Extension = new ClassicControllerData(this);
-        }
-
         RequestIdentifyWiiMotionPlus(); // why not?
     }
 
@@ -207,8 +201,7 @@ public class Wiimote
         else if (val == ID_ClassicPro)
         {
             _current_ext = ExtensionController.CLASSIC_PRO;
-            if (_Extension == null || _Extension.GetType() != typeof(ClassicControllerData))
-                _Extension = new ClassicControllerData(this);
+            _Extension = null;
         }
         else if (val == ID_Nunchuck)
         {
@@ -231,7 +224,6 @@ public class Wiimote
         }
         else
         {
-            Debug.Log(val.ToString("X12"));
             _current_ext = ExtensionController.NONE;
             _Extension = null;
         }
