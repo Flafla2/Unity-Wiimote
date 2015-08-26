@@ -221,8 +221,9 @@ public class WiimoteDemo : MonoBehaviour {
                 {
                     data.SetZeroValues();
                     model.rot.localRotation = Quaternion.LookRotation(Vector3.right, GetAccelVector());
-                    wmpOffset = Vector3.zero;
                 }
+                if(GUILayout.Button("Reset Offset"))
+                    wmpOffset = Vector3.zero;
                 GUILayout.Label("Offset: " + wmpOffset.ToString());
             }
             else if (wiimote.current_ext == ExtensionController.WIIU_PRO)
