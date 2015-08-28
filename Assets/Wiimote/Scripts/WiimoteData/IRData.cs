@@ -12,12 +12,12 @@ namespace WiimoteApi
         ///
         /// This is only updated if the Wii Remote has a report mode with IR
         ///
-        ///        | Position X | Position Y |  Size  |  X min  |  Y min  |  X max  |  Y max  | Intensity
-        /// ------ | ---------- | ---------- | ------ | ------- | ------- | ------- | ------- | ---------
-        /// Range: |  0 - 1023  |  0 - 767   | 0 - 15 | 0 - 127 | 0 - 127 | 0 - 127 | 0 - 127 |  0 - 256
-        /// Index: |     0      |      1     |   2    |    3    |    4    |    5    |    6    |     7
+        /// |       | Position X | Position Y |  Size  |  X min  |  Y min  |  X max  |  Y max  | Intensity |
+        /// |------ | ---------- | ---------- | ------ | ------- | ------- | ------- | ------- | --------- |
+        /// |Range: |  0 - 1023  |  0 - 767   | 0 - 15 | 0 - 127 | 0 - 127 | 0 - 127 | 0 - 127 |  0 - 256  |
+        /// |Index: |     0      |      1     |   2    |    3    |    4    |    5    |    6    |     7     |
         ///
-        /// int[dot index, x (0) / y (1) / size (2) / xmin (3) / ymin (4) / xmax (5) / ymax (6) / intensity (7)]
+        /// \code int[dot index, x (0) / y (1) / size (2) / xmin (3) / ymin (4) / xmax (5) / ymax (6) / intensity (7)] \endcode
         /// 
         /// \sa IRDataType, Wiimote::SetupIRCamera(IRDataType)
         public ReadOnlyMatrix<int> ir { get { return _ir_readonly; } }
@@ -221,10 +221,11 @@ namespace WiimoteApi
         /// \brief Attempts to identify which of the four IR "dots" reported by the Wii Remote are from the Wii sensor bar.
         /// \param predict If true, and one of the dots is outside of the Wii Remote's field of view,
         ///                WiimoteApi will attempt to predict the other dot's position outside of the screen (default true).
-        /// \return First Dimension: Index of detected IR dot.
-        ///         Second Dimension: 0: X, 1: Y, 2: Index in \link ir (or -1 if predicted)
-        ///         Size: 2x3
-        ///         Range: 0-1 with respect to the Wii Remote Camera dimensions.  If \c predict is true this may be outside of that range.
+        ///
+        /// \returns First Dimension: Index of detected IR dot.\n
+        /// Second Dimension: 0: X, 1: Y, 2: Index in \link ir \endlink (or -1 if predicted)\n
+        /// Size: 2x3\n
+        /// Range: 0-1 with respect to the Wii Remote Camera dimensions.  If \c predict is true this may be outside of that range.
         public float[,] GetProbableSensorBarIR(bool predict = true)
         {
             // If necessary, change the current "sensor bar" IR indices to new ones.  This happens if one of the dots went out of focus and a new one took its place.

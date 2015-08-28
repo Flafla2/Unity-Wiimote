@@ -10,11 +10,11 @@ namespace WiimoteApi
         ///        This is only updated if the Wii Remote has a report mode that supports
         ///        the Accelerometer.
         ///
-        /// Range:            0 - 1024
-        /// The sign of the directions below are with respect to the zero point of the accelerometer:
-        /// Up/Down:          +Z/-Z
-        /// Left/Right:       +X/-X
-        /// Forward/Backward: -Y/+Y
+        /// Range:            0 - 1024\n
+        /// *The sign of the directions below are with respect to the zero point of the accelerometer:*\n
+        /// Up/Down:          +Z/-Z\n
+        /// Left/Right:       +X/-X\n
+        /// Forward/Backward: -Y/+Y\n
         public ReadOnlyArray<int> accel { get { return _accel_readonly; } }
         private ReadOnlyArray<int> _accel_readonly;
         private int[] _accel;
@@ -107,9 +107,9 @@ namespace WiimoteApi
         ///        These values are in Wii Remote coordinates (in the direction of gravity)
         /// \sa  CalibrateAccel(),  GetAccelZeroPoints(),  accel,  accel_calib
         ///
-        /// Range: -1 to 1
-        /// Up/Down:          +Z/-Z
-        /// Left/Right:       +X/-X
+        /// Range: -1 to 1\n
+        /// Up/Down:          +Z/-Z\n
+        /// Left/Right:       +X/-X\n
         /// Forward/Backward: -Y/+Y
         public float[] GetCalibratedAccelData()
         {

@@ -9,9 +9,9 @@ namespace WiimoteApi {
 
 public class WiimoteManager
 {
-    public const ushort vendor_id_wiimote = 0x057e;
-    public const ushort product_id_wiimote = 0x0306;
-    public const ushort product_id_wiimoteplus = 0x0330;
+    private const ushort vendor_id_wiimote = 0x057e;
+    private const ushort product_id_wiimote = 0x0306;
+    private const ushort product_id_wiimoteplus = 0x0330;
 
     /// A list of all currently connected Wii Remotes.
     public static List<Wiimote> Wiimotes { get { return _Wiimotes; } }

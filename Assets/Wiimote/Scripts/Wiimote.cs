@@ -58,6 +58,11 @@ public class Wiimote
         }
     }
 
+    /// If this Wiimote is a Wii U Pro Controller,
+    /// this contains all relevant Pro Controller data as it is reported by
+    /// the Controller.  If this Wiimote is not a Wii U Pro Controller, this is \c null.
+    ///
+    /// \sa current_ext
     public WiiUProData WiiUPro {
         get {
             if(current_ext == ExtensionController.WIIU_PRO)
@@ -494,7 +499,7 @@ public class Wiimote
     /// 
     /// Reading from the Wii Remote's internal registers can give important data not available through normal output reports.
     /// This can, for example, be used to read saved Mii data from the Wii Remote's EEPROM registers.  It is also used by some
-    /// of WiimoteApi's setup functions (RequestIdentifyExtension() for example).
+    /// of WiimoteApi's setup functions.
     /// 
     /// If you use this incorrectly (for example, if you attempt to read from an invalid block of data), \c Responder will not be called.
     public int SendRegisterReadRequest(RegisterType type, int offset, int size, ReadResponder Responder)
