@@ -28,19 +28,11 @@ API:
 - **Open and Growing**: The API is licensed under the generous MIT license (see LICENSE.txt) so you can easily use it
   in your projects.  Source code access lets you debug easer.  Of course, it's also free!
 
-Getting Started
----------------
+Installation
+------------
 
-The API itself is located in /Assets/Wiimote.  There, you can find all of the Native plugins
-[Signal11's HIDAPI](https://github.com/signal11/hidapi) as well as the scripts that make up the API itself.  Simply drag
-the Wiimote folder into your Unity project and you are good to go!
-
-###HIDAPI Modifications
-
-This API makes use of a slightly modified version of [Signal11's HIDAPI](https://github.com/signal11/hidapi).  The Windows
-of HIDAPI was changed to handle a regression on the Microsoft bluetooth stack.  You can find the fixed version of HIDAPI
-in the /hidapi-modified directory.  To read up on the specifics check out
-[This Issue](https://github.com/signal11/hidapi/issues/218) on Github.
+The latest release can be found at github.com/Flafla2/Unity-Wiimote/releases
+To install, double click on Unity-Wiimote.unitypackage or go to Assets->Import Package->Custom Package... in the Unity Editor.
 
 Future Changes
 --------------
