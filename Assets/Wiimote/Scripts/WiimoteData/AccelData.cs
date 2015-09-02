@@ -10,6 +10,9 @@ namespace WiimoteApi
         ///        This is only updated if the Wii Remote has a report mode that supports
         ///        the Accelerometer.
         ///
+        /// \warning This should not be used unless if you want to calibrate the accelerometer manually.  Use
+        ///          CalibrateAccel() instead.
+        ///
         /// Range:            0 - 1024\n
         /// *The sign of the directions below are with respect to the zero point of the accelerometer:*\n
         /// Up/Down:          +Z/-Z\n

@@ -186,7 +186,9 @@ namespace WiimoteApi
             midpoint[0] = 1 - midpoint[0] - 0.5f;
             midpoint[1] = midpoint[1] - 0.5f;
 
-            float rotation = Mathf.Atan2(Owner.Accel.accel[2], Owner.Accel.accel[0]) - (float)(Mathf.PI / 2.0f);
+            float[] accel = Owner.Accel.GetCalibratedAccelData();
+
+            float rotation = Mathf.Atan2(accel[2], accel[0]) - (float)(Mathf.PI / 2.0f);
             float cos = Mathf.Cos(rotation);
             float sin = Mathf.Sin(rotation);
             ret[0] = midpoint[0] * cos + midpoint[1] * sin;
