@@ -126,6 +126,9 @@ WiimoteApi::Wiimote::wmp_attached to see if a Wii Motion Plus is attached.  If y
 using WiimoteApi::Wiimote::ActivateWiiMotionPlus().  This makes the Wii Motion Plus behave as an extension controller (such as the
 nunchuck or the classic controller).  See *Reading from Extension Controllers* for details.
 
+If you want to deactivate the Wii Motion Plus (and use any extension controller connected to it such as a Nunchuck or Classic
+Controller) you can use WiimoteApi::Wiimote::DeactivateWiiMotionPlus().
+
 <b>Example:</b>
 ~~~~~~~~~~~~~~~{.cs}
 Wiimote remote; // Initialized previously

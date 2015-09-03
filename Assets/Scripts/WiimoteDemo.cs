@@ -147,6 +147,10 @@ public class WiimoteDemo : MonoBehaviour {
             wiimote.RequestIdentifyWiiMotionPlus();
         if ((wiimote.wmp_attached || wiimote.Type == WiimoteType.PROCONTROLLER) && GUILayout.Button("Activate WMP"))
             wiimote.ActivateWiiMotionPlus();
+        if ((wiimote.current_ext == ExtensionController.MOTIONPLUS ||
+            wiimote.current_ext == ExtensionController.MOTIONPLUS_CLASSIC ||
+            wiimote.current_ext == ExtensionController.MOTIONPLUS_NUNCHUCK) && GUILayout.Button("Deactivate WMP"))
+            wiimote.DeactivateWiiMotionPlus();
 
         GUILayout.Label("Calibrate Accelerometer");
         GUILayout.BeginHorizontal();
