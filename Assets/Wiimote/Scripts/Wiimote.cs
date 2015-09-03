@@ -357,6 +357,14 @@ public class Wiimote
         return true;
     }
 
+    public bool DeactivateWiiMotionPlus()
+    {
+        if (current_ext != ExtensionController.MOTIONPLUS && current_ext != ExtensionController.MOTIONPLUS_CLASSIC && current_ext != ExtensionController.MOTIONPLUS_NUNCHUCK)
+            Debug.LogWarning("There is a request to deactivate the Wii Motion Plus even though it has not been activated!  Trying anyway.");
+
+        return SendRegisterWriteRequest(RegisterType.CONTROL, 0xA400F0, new byte[] { 0x55 }) > 0;
+    }
+
     /// \brief Attempts to activate any connected extension controller
     /// \sa RequestIdentifyExtension(), StatusData::ext_connected
     /// \return If the activation request was successfully sent to the Wii Remote.
