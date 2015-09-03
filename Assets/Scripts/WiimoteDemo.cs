@@ -23,6 +23,11 @@ public class WiimoteDemo : MonoBehaviour {
         initial_rotation = model.rot.localRotation;
     }
 
+    // updates per second
+    private int ups = 100;
+    private int ups_count;
+    private float lastUPSCheck = 0;
+
 	void Update () {
         if (!WiimoteManager.HasWiimote()) { return; }
 
@@ -34,13 +39,23 @@ public class WiimoteDemo : MonoBehaviour {
             ret = wiimote.ReadWiimoteData();
 
             if (wiimote.current_ext == ExtensionController.MOTIONPLUS) {
-                Vector3 offset = new Vector3(  -wiimote.MotionPlus.PitchSpeed * 0.01f,
-                                                wiimote.MotionPlus.YawSpeed   * 0.01f,
-                                                wiimote.MotionPlus.RollSpeed  * 0.01f);
+                Vector3 offset = new Vector3(  -wiimote.MotionPlus.PitchSpeed / (float)ups,
+                                                wiimote.MotionPlus.YawSpeed   / (float)ups,
+                                                wiimote.MotionPlus.RollSpeed  / (float)ups);
                 wmpOffset += offset;
                 model.rot.Rotate(offset, Space.Self);
             }
+
+            if(ret > 0)
+                ups_count++;
         } while (ret > 0);
+
+        if (Time.time - lastUPSCheck > 1)
+        {
+            ups = ups_count;
+            lastUPSCheck = Time.time;
+            ups_count = 0;
+        }
 
         model.a.enabled = wiimote.Button.a;
         model.b.enabled = wiimote.Button.b;
