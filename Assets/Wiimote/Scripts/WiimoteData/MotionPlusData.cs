@@ -4,9 +4,9 @@
         /// The rotational velocity in the Pitch direction of the Wii Remote, as
         /// reported by the Wii Motion Plus.  Measured in degrees per second.
         ///
-        /// \note The Wii Remote sends updates at a frequency of 100Hz.  So, one way
-        ///       of finding the change in degrees over the previous report is to multiply
-        ///       this value by 0.01.
+        /// \note The Wii Remote sends updates at a frequency of 95Hz.  So, one way
+        ///       of finding the change in degrees over the previous report is to divide
+        ///       this value by 95.
         public float PitchSpeed { get { return _PitchSpeed; } }
         private float _PitchSpeed = 0;
 
@@ -15,9 +15,9 @@
         /// The rotational velocity in the Yaw direction of the Wii Remote, as
         /// reported by the Wii Motion Plus.  Measured in degrees per second.
         ///
-        /// \note The Wii Remote sends updates at a frequency of 100Hz.  So, one way
-        ///       of finding the change in degrees over the previous report is to multiply
-        ///       this value by 0.01.
+        /// \note The Wii Remote sends updates at a frequency of 95Hz.  So, one way
+        ///       of finding the change in degrees over the previous report is to divide
+        ///       this value by 95.
         public float YawSpeed { get { return _YawSpeed; } }
         private float _YawSpeed = 0;
 
@@ -26,9 +26,9 @@
         /// The rotational velocity in the Roll direction of the Wii Remote, as
         /// reported by the Wii Motion Plus.  Measured in degrees per second.
         ///
-        /// \note The Wii Remote sends updates at a frequency of 100Hz.  So, one way
-        ///       of finding the change in degrees over the previous report is to multiply
-        ///       this value by 0.01.
+        /// \note The Wii Remote sends updates at a frequency of 95Hz.  So, one way
+        ///       of finding the change in degrees over the previous report is to divide
+        ///       this value by 95.
         public float RollSpeed { get { return _RollSpeed; } }
         private float _RollSpeed;
 
@@ -69,7 +69,7 @@
         // any better in the future.  Realistically this value is the result of the Analog/Digital converter
         // in the Wii Motion Plus along with the analog output of the gyros, but the documentation is so
         // shitty that I don't even care anymore.
-        private const float MagicCalibrationConstant = 0.0326173f;
+        private const float MagicCalibrationConstant = 0.05f;
 
         public MotionPlusData(Wiimote Owner) : base(Owner) { }
 
