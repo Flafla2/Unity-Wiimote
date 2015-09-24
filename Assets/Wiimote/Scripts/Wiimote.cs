@@ -123,6 +123,8 @@ public class Wiimote
     private byte[] InterleavedDataBuffer = new byte[18];
     private bool ExpectingSecondInterleavedPacket = false;
 
+    private bool ExpectingWiiMotionPlusSwitch = false;
+
     public Wiimote(IntPtr hidapi_handle, string hidapi_path, WiimoteType Type)
     {
         _hidapi_handle  = hidapi_handle;
@@ -135,7 +137,7 @@ public class Wiimote
         _Status = new StatusData(this);
         _Extension = null;
 
-        RequestIdentifyWiiMotionPlus(); // why not?
+        //RequestIdentifyWiiMotionPlus(); // why not?
     }
 
     private static byte[] ID_InactiveMotionPlus  = new byte[] {0x00, 0x00, 0xA6, 0x20, 0x00, 0x05};
@@ -232,12 +234,6 @@ public class Wiimote
             _current_ext = ExtensionController.NONE;
             _Extension = null;
         }
-
-        if(current_ext != ExtensionController.MOTIONPLUS && 
-            current_ext != ExtensionController.MOTIONPLUS_CLASSIC && 
-            current_ext != ExtensionController.MOTIONPLUS_NUNCHUCK &&
-            current_ext != ExtensionController.WIIU_PRO)
-            ActivateExtension();
     }
 
     #region Setups
@@ -354,6 +350,11 @@ public class Wiimote
         res = SendRegisterWriteRequest(RegisterType.CONTROL, 0xA600FE, new byte[] { 0x04 });
         if (res < 0) return false;
 
+        _current_ext = ExtensionController.MOTIONPLUS;
+        if (_Extension == null || _Extension.GetType() != typeof(MotionPlusData))
+            _Extension = new MotionPlusData(this);
+        ExpectingWiiMotionPlusSwitch = true;
+
         return true;
     }
 
@@ -361,8 +362,8 @@ public class Wiimote
     {
         if (current_ext != ExtensionController.MOTIONPLUS && current_ext != ExtensionController.MOTIONPLUS_CLASSIC && current_ext != ExtensionController.MOTIONPLUS_NUNCHUCK)
             Debug.LogWarning("There is a request to deactivate the Wii Motion Plus even though it has not been activated!  Trying anyway.");
-
-        return SendRegisterWriteRequest(RegisterType.CONTROL, 0xA400F0, new byte[] { 0x55 }) > 0;
+        int res = SendRegisterWriteRequest(RegisterType.CONTROL, 0xA400F0, new byte[] { 0x55 });
+        return res > 0;
     }
 
     /// \brief Attempts to activate any connected extension controller
@@ -628,11 +629,18 @@ public class Wiimote
                     if (Status.ext_connected)                // The Wii Remote doesn't allow reading from the extension identifier
                     {                                        // when nothing is connected.
                         Debug.Log("An extension has been connected.");
-                        RequestIdentifyExtension();         // Identify what extension was connected.
+                        if (current_ext != ExtensionController.MOTIONPLUS)
+                        {
+                            ActivateExtension();
+                            RequestIdentifyExtension();         // Identify what extension was connected.
+                        }
+                        else
+                            ExpectingWiiMotionPlusSwitch = false;
                     }
                     else
                     {
-                        _current_ext = ExtensionController.NONE;
+                        if (!ExpectingWiiMotionPlusSwitch)
+                            _current_ext = ExtensionController.NONE;
                         Debug.Log("An extension has been disconnected.");
                     }
                 }
