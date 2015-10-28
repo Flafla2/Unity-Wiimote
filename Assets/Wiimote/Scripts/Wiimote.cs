@@ -174,6 +174,7 @@ public class Wiimote
     private const long ID_ActiveMotionPlus_Nunchuck = 0x0000A4200505;
     private const long ID_ActiveMotionPlus_Classic  = 0x0000A4200705;
     private const long ID_Nunchuck                  = 0x0000A4200000;
+    private const long ID_Nunchuck2                 = 0xFF00A4200000;
     private const long ID_Classic                   = 0x0000A4200101;
     private const long ID_ClassicPro                = 0x0100A4200101;
     private const long ID_WiiUPro                   = 0x0000A4200120;
@@ -210,7 +211,7 @@ public class Wiimote
             _current_ext = ExtensionController.CLASSIC_PRO;
             _Extension = null;
         }
-        else if (val == ID_Nunchuck)
+        else if (val == ID_Nunchuck || val == ID_Nunchuck2)
         {
             _current_ext = ExtensionController.NUNCHUCK;
             if (_Extension == null || _Extension.GetType() != typeof(NunchuckData))
