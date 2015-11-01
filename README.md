@@ -31,7 +31,7 @@ API:
 Installation
 ------------
 
-The latest release can be found [here](www.github.com/Flafla2/Unity-Wiimote/releases)
+The latest release can be found [here](http://www.github.com/Flafla2/Unity-Wiimote/releases)
 
 To install, open Unity-Wiimote.unitypackage or go to Assets->Import Package->Custom Package... in the Unity Editor and locate Unity-Wiimote.unitypackage.
 
