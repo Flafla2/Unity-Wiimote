@@ -117,10 +117,13 @@ public class WiimoteManager
     /// \param remote The remote to cleanup
     public static void Cleanup(Wiimote remote)
     {
-        if (remote.hidapi_handle != IntPtr.Zero)
-            HIDapi.hid_close(remote.hidapi_handle);
+        if (remote != null)
+		{
+			if (remote.hidapi_handle != IntPtr.Zero)
+				HIDapi.hid_close (remote.hidapi_handle);
 
-        Wiimotes.Remove(remote);
+			Wiimotes.Remove (remote);
+		}
     }
 
     /// \return If any Wii Remotes are connected and found by FindWiimote
