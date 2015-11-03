@@ -89,7 +89,7 @@ public class WiimoteManager
 
                 // Wii U Pro Controllers have the same identifiers as the newer Wii Remote Plus except for product
                 // string (WHY nintendo...)
-                if(enumerate.product_string.EndsWith("UC"))
+                if(String.IsNullOrEmpty(enumerate.product_string) == false && enumerate.product_string.EndsWith("UC"))
                     trueType = WiimoteType.PROCONTROLLER;
 
                 remote = new Wiimote(handle, enumerate.path, trueType);
