@@ -5,8 +5,7 @@ namespace WiimoteApi {
 	{
 		/// Guitar Analog Stick values.  This is a size 2 Array [X, Y] of
 		/// RAW (unprocessed) stick data.  Generally the analog stick returns
-		/// values in the range 35-228 for X and 27-220 for Y.  The center for
-		/// both is around 128.
+		/// values in the range 4-61, the center being at 32.
 		public ReadOnlyArray<byte> stick { get { return _stick_readonly; } }
 		private ReadOnlyArray<byte> _stick_readonly;
 		private byte[] _stick;
@@ -40,8 +39,10 @@ namespace WiimoteApi {
 		/// Strum Down
 		public bool strum_down { get { return _strum_down; } }
 		private bool _strum_down;
+		public bool strum {get{ return _strum_down || _strum_up; }}
 
-		/// Whammy Bar
+		/// Whammy Bar, typically rests somewhere between 14-16
+		/// and maxes out at 26.
 		public byte whammy { get { return _whammy; } }
 		private byte _whammy;
 
@@ -63,10 +64,10 @@ namespace WiimoteApi {
 				return false;
 			}
 
-			_stick[0] = data[0];
-			_stick[1] = data[1];
+			_stick[0] = (byte)(data[0] & 0x3F); // because the first 2 bits differ by model
+			_stick[1] = (byte)(data[1] & 0x3F); // because the first 2 bits differ by model
 
-			_whammy = data[3];
+			_whammy = (byte)(data[3] & 0x1F); // because the first 3 bits differ by model
 
 			_green = (data[5] & 0x10) != 0x10;
 			_red = (data[5] & 0x40) != 0x40;
@@ -84,17 +85,20 @@ namespace WiimoteApi {
 		}
 
 		/// Returns a size 2 [X, Y] array of the analog stick's position, in the range
-		/// 0 - 1.  This takes into account typical Nunchuck data ranges and zero points.
+		/// (-1, 1)
 		public float[] GetStick01() {
 			float[] ret = new float[2];
-			ret[0] = _stick[0];
-			ret[0] -= 35;
-			ret[1] = stick[1];
-			ret[1] -= 27;
 			for(int x=0;x<2;x++) {
-				ret[x] /= 193f;
+				ret[x] = (_stick[x] - 32) / 32f;
 			}
 			return ret;
+		}
+
+		/// Returns a the whammy bar's value in the range (0, 1), where 0 is resting 
+		/// position and 1 is fully depressed
+		public float GetWhammy01() {
+			float ret = (_whammy - 16) / 10f;
+			return ret < 0 ? 0 : ret > 1 ? 1 : ret;
 		}
 	}
 }
