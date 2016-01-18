@@ -71,6 +71,7 @@ namespace WiimoteApi {
 		/// Strum Down
 		public bool strum_down { get { return _strum_down; } }
 		private bool _strum_down;
+		// Strum Up OR Down
 		public bool strum {get{ return _strum_down || _strum_up; }}
 
 		/// Whammy Bar, typically rests somewhere between 14-16
@@ -101,8 +102,8 @@ namespace WiimoteApi {
 				return false;
 			}
 
-			_stick[0] = (byte)(data[0] & 0x3F); // because the first 2 bits differ by model
-			_stick[1] = (byte)(data[1] & 0x3F); // because the first 2 bits differ by model
+			_stick[0] = (byte)(data[0] & 0x3F); // because the last 2 bits differ by model
+			_stick[1] = (byte)(data[1] & 0x3F); // because the last 2 bits differ by model
 
 			_whammy = (byte)(data[3] & 0x1F); // only first 5 bits used
 
