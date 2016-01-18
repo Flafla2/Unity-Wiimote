@@ -25,31 +25,43 @@ namespace WiimoteApi {
 		public bool has_slider { get { return _has_slider; } }
 		private bool _has_slider;
 
-		/// Get active frets, ignoring slider value
+		/// Get active green fret, ignoring slider value
 		public bool green_fret { get { return _frets[0]; } }
+		/// Get active red fret, ignoring slider value
 		public bool red_fret { get { return _frets[1]; } }
+		/// Get active yellow fret, ignoring slider value
 		public bool yellow_fret { get { return _frets[2]; } }
+		/// Get active blue fret, ignoring slider value
 		public bool blue_fret { get { return _frets[3]; } }
+		/// Get active orange fret, ignoring slider value
 		public bool orange_fret { get { return _frets[4]; } }
 
-		/// Get the slider value as a fret
+		/// True if player's finger is touching green segment of slider
 		public bool green_slider { get { return _slider < 0x08; } }
+		/// True if player's finger is touching red segment of slider
 		public bool red_slider { get { return _slider > 0x06 && _slider < 0x0E; } }
+		/// True if player's finger is touching yellow segment of slider
 		public bool yellow_slider { get { return _slider > 0x0B && _slider < 0x16 && _slider != 0x0F; } }
+		/// True if player's finger is touching blue segment of slider
 		public bool blue_slider { get { return _slider > 0x13 && _slider < 0x1B; } }
+		/// True if player's finger is touching orange segment of slider
 		public bool orange_slider { get { return _slider > 0x19 && _slider < 0x20; } }
 
-		/// Get active fret, whether player is using frets or slider
+		/// True if player is touching EITHER green fret or green slider (if supported)
 		public bool green { get { return _frets[0] || green_slider; } }
+		/// True if player is touching EITHER red fret or red slider (if supported)
 		public bool red { get { return _frets[1] || red_slider; } }
+		/// True if player is touching EITHER yellow fret or yellow slider (if supported)
 		public bool yellow { get { return _frets[2] || yellow_slider; } }
+		/// True if player is touching EITHER blue fret or blue slider (if supported)
 		public bool blue { get { return _frets[3] || blue_slider; } }
+		/// True if player is touching EITHER orange fret or orange slider (if supported)
 		public bool orange { get { return _frets[4] || orange_slider; } }
 
-		/// Button: Plus
+		/// Button: Plus (start/pause)
 		public bool plus { get { return _plus; } }
 		private bool _plus;
-		/// Button: Minus
+		/// Button: Minus (star power)
 		public bool minus { get { return _minus; } }
 		private bool _minus;
 
@@ -92,22 +104,22 @@ namespace WiimoteApi {
 			_stick[0] = (byte)(data[0] & 0x3F); // because the first 2 bits differ by model
 			_stick[1] = (byte)(data[1] & 0x3F); // because the first 2 bits differ by model
 
-			_whammy = (byte)(data[3] & 0x1F); // because the first 3 bits differ by model
+			_whammy = (byte)(data[3] & 0x1F); // only first 5 bits used
 
-			_frets[0] = (data[5] & 0x10) != 0x10;
-			_frets[1] = (data[5] & 0x40) != 0x40;
-			_frets[2] = (data[5] & 0x08) != 0x08;
-			_frets[3] = (data[5] & 0x20) != 0x20;
-			_frets[4] = (data[5] & 0x80) != 0x80;
+			_frets[0] = (data[5] & 0x10) == 0;
+			_frets[1] = (data[5] & 0x40) == 0;
+			_frets[2] = (data[5] & 0x08) == 0;
+			_frets[3] = (data[5] & 0x20) == 0;
+			_frets[4] = (data[5] & 0x80) == 0;
 
 			_has_slider = data [2] != 0xFF;
-			_slider = data [2];
+			_slider = (byte)(data [2] & 0x1F); // only first 5 bits used
 
-			_minus = (data[4] & 0x10) != 0x10;
-			_plus = (data[4] & 0x04) != 0x04;
+			_minus = (data[4] & 0x10) == 0;
+			_plus = (data[4] & 0x04) == 0;
 
-			_strum_up = (data[5] & 0x01) != 0x01;
-			_strum_down = (data[4] & 0x40) != 0x40;
+			_strum_up = (data[5] & 0x01) == 0;
+			_strum_down = (data[4] & 0x40) == 0;
 
 			return true;
 		}
