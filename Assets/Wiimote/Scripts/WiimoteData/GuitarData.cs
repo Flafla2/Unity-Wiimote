@@ -71,7 +71,7 @@ namespace WiimoteApi {
 		/// Strum Down
 		public bool strum_down { get { return _strum_down; } }
 		private bool _strum_down;
-		// Strum Up OR Down
+		/// Strum Up OR Down
 		public bool strum {get{ return _strum_down || _strum_up; }}
 
 		/// Whammy Bar, typically rests somewhere between 14-16
