@@ -19,7 +19,7 @@ API:
         - *Classic Controller*: All Buttons (including analog buttons) and Joysticks
         - *Wii Motion Plus*: Change in Pitch / Yaw / Roll.
         - *Wii U Pro Controller*: All Buttons and Joysticks - The Wii U Pro Controller acts as a Wii Remote with a custom extension controller, so it is compatible with this API.
-        - *Guitar Hero Guitar Controller*: All buttons, both strum directions, whammy, and analog stick
+        - *Guitar Hero Guitar Controller*: All buttons, both strum directions, whammy, slider (touchbar), and analog stick
         - More extension controllers coming soon!  Raw data also available for custom extension controllers.
     - Controlling the remote's 4 LEDs
     - Status reporting (battery level, player LED state, etc.)
