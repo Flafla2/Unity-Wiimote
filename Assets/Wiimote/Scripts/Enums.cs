@@ -103,7 +103,9 @@ public enum ExtensionController
     MOTIONPLUS_NUNCHUCK, 
     /// An activated Wii Motion Plus with a Classic Controller in passthrough mode. 
     /// \warning Classic Controller passthrough is currently not supported
-    MOTIONPLUS_CLASSIC
+    MOTIONPLUS_CLASSIC,
+	/// Guitar Hero controller
+	GUITAR
 }
 
 public enum AccelCalibrationStep {
