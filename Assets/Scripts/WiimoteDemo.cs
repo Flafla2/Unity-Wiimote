@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using System.Collections;
 using System.Text;
+using System;
 using WiimoteApi;
 
 public class WiimoteDemo : MonoBehaviour {
@@ -258,7 +259,9 @@ public class WiimoteDemo : MonoBehaviour {
 			else if (wiimote.current_ext == ExtensionController.GUITAR) {
 				GUILayout.Label ("Guitar", bold);
 				GuitarData data = wiimote.Guitar;
-				GUILayout.Label ("Stick: " + data.GetStick01() [0] + ", " + data.GetStick01() [1]);
+				float[] stick = data.GetStick01 ();
+				GUILayout.Label ("Stick: " + stick [0] + ", " + stick [1]);
+				GUILayout.Label ("Slider: " + (data.has_slider ? Convert.ToString (data.GetSlider01 ()) : "unsupported"));
 				GUILayout.Label ("Green: " + data.green);
 				GUILayout.Label ("Red: " + data.red);
 				GUILayout.Label ("Yellow: " + data.yellow);

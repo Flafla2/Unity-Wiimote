@@ -10,21 +10,41 @@ namespace WiimoteApi {
 		private ReadOnlyArray<byte> _stick_readonly;
 		private byte[] _stick;
 
-		/// Button: Green
-		public bool green { get { return _green; } }
-		private bool _green;
-		/// Button: Red
-		public bool red { get { return _red; } }
-		private bool _red;
-		/// Button: Yellow
-		public bool yellow { get { return _yellow; } }
-		private bool _yellow;
-		/// Button: Blue
-		public bool blue { get { return _blue; } }
-		private bool _blue;
-		/// Button: Orange
-		public bool orange { get { return _orange; } }
-		private bool _orange;
+		/// Guitar frets where element 0 is green and element 4 is orange
+		public ReadOnlyArray<bool> frets { get { return _frets_readonly; } }
+		private ReadOnlyArray<bool> _frets_readonly;
+		private bool[] _frets;
+
+		/// Guitar slider (supported in some models) - the strip below the
+		/// regular frets on Guitar Hero IV+ controllers. Analog data in
+		/// range (4, 31), snaps to 15 when untouched.
+		public byte slider { get { return _slider; } }
+		private byte _slider;
+
+		/// True if the model has a slider
+		public bool has_slider { get { return _has_slider; } }
+		private bool _has_slider;
+
+		/// Get active frets, ignoring slider value
+		public bool green_fret { get { return _frets[0]; } }
+		public bool red_fret { get { return _frets[1]; } }
+		public bool yellow_fret { get { return _frets[2]; } }
+		public bool blue_fret { get { return _frets[3]; } }
+		public bool orange_fret { get { return _frets[4]; } }
+
+		/// Get the slider value as a fret
+		public bool green_slider { get { return _slider < 0x08; } }
+		public bool red_slider { get { return _slider > 0x06 && _slider < 0x0E; } }
+		public bool yellow_slider { get { return _slider > 0x0B && _slider < 0x16 && _slider != 0x0F; } }
+		public bool blue_slider { get { return _slider > 0x13 && _slider < 0x1B; } }
+		public bool orange_slider { get { return _slider > 0x19 && _slider < 0x20; } }
+
+		/// Get active fret, whether player is using frets or slider
+		public bool green { get { return _frets[0] || green_slider; } }
+		public bool red { get { return _frets[1] || red_slider; } }
+		public bool yellow { get { return _frets[2] || yellow_slider; } }
+		public bool blue { get { return _frets[3] || blue_slider; } }
+		public bool orange { get { return _frets[4] || orange_slider; } }
 
 		/// Button: Plus
 		public bool plus { get { return _plus; } }
@@ -53,13 +73,18 @@ namespace WiimoteApi {
 
 			_stick = new byte[2];
 			_stick_readonly = new ReadOnlyArray<byte>(_stick);
+			_frets = new bool[5];
+			_frets_readonly = new ReadOnlyArray<bool> (_frets);
 		}
 
 		public override bool InterpretData(byte[] data) {
 			if(data == null || data.Length < 6) {
-				_stick[0] = 128; _stick[1] = 128;
-				_whammy = 0x0F;
-				_green = _red = _yellow = _blue = _orange = false;
+				_stick[0] = 32; _stick[1] = 32;
+				_whammy = 0x10;
+				for (int i = 0; i < _frets.Length; i++) {
+					_frets [i] = false;
+				}
+				_slider = 0x0F;
 				_strum_up = _strum_down = _minus = _plus = false;
 				return false;
 			}
@@ -69,11 +94,14 @@ namespace WiimoteApi {
 
 			_whammy = (byte)(data[3] & 0x1F); // because the first 3 bits differ by model
 
-			_green = (data[5] & 0x10) != 0x10;
-			_red = (data[5] & 0x40) != 0x40;
-			_yellow = (data[5] & 0x08) != 0x08;
-			_blue = (data[5] & 0x20) != 0x20;
-			_orange = (data[5] & 0x80) != 0x80;
+			_frets[0] = (data[5] & 0x10) != 0x10;
+			_frets[1] = (data[5] & 0x40) != 0x40;
+			_frets[2] = (data[5] & 0x08) != 0x08;
+			_frets[3] = (data[5] & 0x20) != 0x20;
+			_frets[4] = (data[5] & 0x80) != 0x80;
+
+			_has_slider = data [2] != 0xFF;
+			_slider = data [2];
 
 			_minus = (data[4] & 0x10) != 0x10;
 			_plus = (data[4] & 0x04) != 0x04;
@@ -99,6 +127,16 @@ namespace WiimoteApi {
 		public float GetWhammy01() {
 			float ret = (_whammy - 16) / 10f;
 			return ret < 0 ? 0 : ret > 1 ? 1 : ret;
+		}
+
+		/// Returns a the slider's value in the range (0, 1), where 0 is green and
+		/// 1 is orange. If the slider is not supported or not actively being used,
+		/// returns -1.
+		public float GetSlider01() {
+			if (!_has_slider || _slider == 0x0F) {
+				return -1f;
+			}
+			return (_slider-4) / 27f;
 		}
 	}
 }
