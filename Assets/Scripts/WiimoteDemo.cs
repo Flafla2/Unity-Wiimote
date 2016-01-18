@@ -258,7 +258,7 @@ public class WiimoteDemo : MonoBehaviour {
 			else if (wiimote.current_ext == ExtensionController.GUITAR) {
 				GUILayout.Label ("Guitar", bold);
 				GuitarData data = wiimote.Guitar;
-				GUILayout.Label ("Stick: " + data.stick [0] + ", " + data.stick [1]);
+				GUILayout.Label ("Stick: " + data.GetStick01() [0] + ", " + data.GetStick01() [1]);
 				GUILayout.Label ("Green: " + data.green);
 				GUILayout.Label ("Red: " + data.red);
 				GUILayout.Label ("Yellow: " + data.yellow);
@@ -268,7 +268,7 @@ public class WiimoteDemo : MonoBehaviour {
 				GUILayout.Label ("Strum Down: " + data.strum_down);
 				GUILayout.Label ("Minus: " + data.minus);
 				GUILayout.Label ("Plus: " + data.plus);
-				GUILayout.Label ("Whammy: " + data.whammy);
+				GUILayout.Label ("Whammy: " + data.GetWhammy01());
 			}
             GUILayout.EndScrollView();
         } else {
