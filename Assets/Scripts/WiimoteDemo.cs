@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using System.Collections;
 using System.Text;
+using System;
 using WiimoteApi;
 
 public class WiimoteDemo : MonoBehaviour {
@@ -255,6 +256,23 @@ public class WiimoteDemo : MonoBehaviour {
                 GUILayout.Label("ZL: "+data.zl);
                 GUILayout.Label("ZR: "+data.zr);
             }
+			else if (wiimote.current_ext == ExtensionController.GUITAR) {
+				GUILayout.Label ("Guitar", bold);
+				GuitarData data = wiimote.Guitar;
+				float[] stick = data.GetStick01 ();
+				GUILayout.Label ("Stick: " + stick [0] + ", " + stick [1]);
+				GUILayout.Label ("Slider: " + (data.has_slider ? Convert.ToString (data.GetSlider01 ()) : "unsupported"));
+				GUILayout.Label ("Green: " + data.green);
+				GUILayout.Label ("Red: " + data.red);
+				GUILayout.Label ("Yellow: " + data.yellow);
+				GUILayout.Label ("Blue: " + data.blue);
+				GUILayout.Label ("Orange: " + data.orange);
+				GUILayout.Label ("Strum Up: " + data.strum_up);
+				GUILayout.Label ("Strum Down: " + data.strum_down);
+				GUILayout.Label ("Minus: " + data.minus);
+				GUILayout.Label ("Plus: " + data.plus);
+				GUILayout.Label ("Whammy: " + data.GetWhammy01());
+			}
             GUILayout.EndScrollView();
         } else {
             scrollPosition = Vector2.zero;
