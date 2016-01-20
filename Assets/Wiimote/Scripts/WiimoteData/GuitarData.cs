@@ -131,7 +131,7 @@ namespace WiimoteApi {
 		public float[] GetStick01() {
 			float[] ret = new float[2];
 			for(int x=0;x<2;x++) {
-				ret[x] = _stick[x] / 64f;
+				ret[x] = _stick[x] / 63f;
 			}
 			return ret;
 		}
