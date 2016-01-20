@@ -16,7 +16,7 @@ API:
     - IR Camera Data (including pointing position)
     - Extension Controller Support:
         - *Nunchuck*: Joystick data, C and Z buttons, Accelerometer data
-        - *Classic Controller*: All Buttons (including analog buttons) and Joysticks
+        - *Classic Controller and Classic Controller Pro*: All Buttons (including analog buttons) and Joysticks
         - *Wii Motion Plus*: Change in Pitch / Yaw / Roll.
         - *Wii U Pro Controller*: All Buttons and Joysticks - The Wii U Pro Controller acts as a Wii Remote with a custom extension controller, so it is compatible with this API.
         - *Guitar Hero Guitar Controller*: All buttons, both strum directions, whammy, slider (touchbar), and analog stick
@@ -42,8 +42,8 @@ Future Changes
 While the API is very powerful already, I would still like to make changes to it to improve it even more.  Namely I would
 like to:
 
-- Add support for all common extension controllers (Classic Controller Pro, etc.)
-    - Add support for Nunchuck passthrough / Classic Controller passthrough mode on the Wii Motion Plus
+- Add support for Nunchuck passthrough / Classic Controller passthrough mode on the Wii Motion Plus
 - Add speaker support (no small feat!)
+- Add support for lass common extension controllers (DJ Hero Turntable, Drawsome Graphics Tablet, etc.)
 
 If you would like to help implement any of these changes, feel free to submit a pull request!

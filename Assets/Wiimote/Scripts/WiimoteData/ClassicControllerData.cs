@@ -27,6 +27,7 @@ namespace WiimoteApi {
 
 		/// Classic Controller left trigger analog value.  This is RAW (unprocessed) analog
 		/// data.  It is in the range 0-31 (with 0 being unpressed and 31 being fully pressed).
+		/// Classic Controller Pro triggers are NOT analog and will always return 0 or 31.
 		///
 		/// \sa rtrigger_range, ltrigger_switch, ltrigger_switch
 		public byte ltrigger_range { get { return _ltrigger_range; } }
@@ -34,6 +35,7 @@ namespace WiimoteApi {
 
 		/// Classic Controller right trigger analog value.  This is RAW (unprocessed) analog
 		/// data.  It is in the range 0-31 (with 0 being unpressed and 31 being fully pressed).
+		/// Classic Controller Pro triggers are NOT analog and will always return 0 or 31.
 		///
 		/// \sa ltrigger_range, rtrigger_switch, rtrigger_switch
 		public byte rtrigger_range { get { return _rtrigger_range; } }
