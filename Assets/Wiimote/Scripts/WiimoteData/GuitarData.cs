@@ -126,11 +126,12 @@ namespace WiimoteApi {
 		}
 
 		/// Returns a size 2 [X, Y] array of the analog stick's position, in the range
-		/// (-1, 1)
+		/// (0, 1). The stick typically rests somewhere NEAR [0.5, 0.5], and the actual
+		/// range ends up being somewhere in the neighborhood of (0.2, 0.8).
 		public float[] GetStick01() {
 			float[] ret = new float[2];
 			for(int x=0;x<2;x++) {
-				ret[x] = (_stick[x] - 32) / 32f;
+				ret[x] = _stick[x] / 64f;
 			}
 			return ret;
 		}
