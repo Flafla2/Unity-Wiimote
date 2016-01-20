@@ -72,6 +72,19 @@ public class Wiimote
         }
     }
 
+	/// If this Wiimote is a Guitar Hero Guitar Controller,
+	/// this contains all relevant Guitar data as it is reported by
+	/// the Controller.  If this Wiimote is not a Guitar Controller, this is \c null.
+	///
+	/// \sa current_ext
+	public GuitarData Guitar {
+		get {
+			if(current_ext == ExtensionController.GUITAR)
+				return (GuitarData)_Extension;
+			return null;
+		}
+	}
+
     private WiimoteData _Extension;
 
     /// Button data component.
@@ -179,6 +192,7 @@ public class Wiimote
     private const long ID_Classic                   = 0x0000A4200101;
     private const long ID_ClassicPro                = 0x0100A4200101;
     private const long ID_WiiUPro                   = 0x0000A4200120;
+	private const long ID_Guitar                    = 0x0000A4200103;
 
 
     private void RespondIdentifyExtension(byte[] data)
@@ -226,6 +240,12 @@ public class Wiimote
             if (_Extension == null || _Extension.GetType() != typeof(WiiUProData))
                 _Extension = new WiiUProData(this);
         }
+		else if (val == ID_Guitar)
+		{
+			_current_ext = ExtensionController.GUITAR;
+			if (_Extension == null || _Extension.GetType() != typeof(GuitarData))
+				_Extension = new GuitarData(this);
+		}
         else
         {
             _current_ext = ExtensionController.NONE;
