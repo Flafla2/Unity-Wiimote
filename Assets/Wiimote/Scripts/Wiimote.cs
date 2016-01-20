@@ -31,9 +31,10 @@ public class Wiimote
         }
     }
 
-    /// If a Classic Controller is currently connected to the Wii Remote's extension port,
-    /// this contains all relevant Classic Controller data as it is reported by
-    /// the Wiimote.  If no Classic Controller is connected, this is \c null.
+    /// If a Classic Controller or Classic Controller Pro is currently connected 
+    /// to the Wii Remote's extension port, this contains all relevant Classic 
+    ///Controller data as it is reported by the Wiimote.  If no Classic Controller 
+    /// nor Classic Controller Pro is connected, this is \c null.
     ///
     /// \sa current_ext
     public ClassicControllerData ClassicController {
@@ -206,18 +207,13 @@ public class Wiimote
             _current_ext = ExtensionController.MOTIONPLUS_CLASSIC;
             _Extension = null;
         }
-        else if (val == ID_ClassicPro)
-        {
-            _current_ext = ExtensionController.CLASSIC_PRO;
-            _Extension = null;
-        }
         else if (val == ID_Nunchuck || val == ID_Nunchuck2)
         {
             _current_ext = ExtensionController.NUNCHUCK;
             if (_Extension == null || _Extension.GetType() != typeof(NunchuckData))
                 _Extension = new NunchuckData(this);
         }
-        else if (val == ID_Classic)
+        else if (val == ID_Classic || val == ID_ClassicPro)
         {
             _current_ext = ExtensionController.CLASSIC;
             if (_Extension == null || _Extension.GetType() != typeof(ClassicControllerData))

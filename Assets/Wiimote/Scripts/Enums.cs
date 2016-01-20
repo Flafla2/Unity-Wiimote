@@ -89,10 +89,8 @@ public enum ExtensionController
     NONE, 
     /// A Nunchuck Controller
     NUNCHUCK, 
-    /// A Classic Controller
+    /// A Classic Controller (also works with Classic Controller Pro)
     CLASSIC, 
-    /// A Classic Controller Pro.
-    CLASSIC_PRO,
     /// A Wii U Pro Controller.  Although a Wii U Pro Controller is not technically an extension controller it is treated
     /// like one when communicating to a bluetooth host.
     WIIU_PRO, 
