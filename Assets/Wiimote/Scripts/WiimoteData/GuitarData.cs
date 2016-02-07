@@ -37,7 +37,7 @@ namespace WiimoteApi {
 		public bool orange_fret { get { return _frets[4]; } }
 
 		/// True if player's finger is touching green segment of slider
-		public bool green_slider { get { return _slider < 0x08; } }
+		public bool green_slider { get { return _slider > 0 && _slider < 0x08; } }
 		/// True if player's finger is touching red segment of slider
 		public bool red_slider { get { return _slider > 0x06 && _slider < 0x0E; } }
 		/// True if player's finger is touching yellow segment of slider
@@ -147,7 +147,7 @@ namespace WiimoteApi {
 		/// 1 is orange. If the slider is not supported or not actively being used,
 		/// returns -1.
 		public float GetSlider01() {
-			if (!_has_slider || _slider == 0x0F) {
+			if (!_has_slider || _slider == 0x0F || _slider == 0) {
 				return -1f;
 			}
 			return (_slider-4) / 27f;
