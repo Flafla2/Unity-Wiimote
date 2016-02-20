@@ -37,15 +37,15 @@ namespace WiimoteApi {
 		public bool orange_fret { get { return _frets[4]; } }
 
 		/// True if player's finger is touching green segment of slider
-		public bool green_slider { get { return _slider > 0 && _slider < 0x08; } }
+		public bool green_slider { get { return _has_slider && _slider > 0 && _slider < 0x08; } }
 		/// True if player's finger is touching red segment of slider
-		public bool red_slider { get { return _slider > 0x06 && _slider < 0x0E; } }
+		public bool red_slider { get { return _has_slider && _slider > 0x06 && _slider < 0x0E; } }
 		/// True if player's finger is touching yellow segment of slider
-		public bool yellow_slider { get { return _slider > 0x0B && _slider < 0x16 && _slider != 0x0F; } }
+		public bool yellow_slider { get { return _has_slider && _slider > 0x0B && _slider < 0x16 && _slider != 0x0F; } }
 		/// True if player's finger is touching blue segment of slider
-		public bool blue_slider { get { return _slider > 0x13 && _slider < 0x1B; } }
+		public bool blue_slider { get { return _has_slider && _slider > 0x13 && _slider < 0x1B; } }
 		/// True if player's finger is touching orange segment of slider
-		public bool orange_slider { get { return _slider > 0x19 && _slider < 0x20; } }
+		public bool orange_slider { get { return _has_slider && _slider > 0x19 && _slider < 0x20; } }
 
 		/// True if player is touching EITHER green fret or green slider (if supported)
 		public bool green { get { return _frets[0] || green_slider; } }
