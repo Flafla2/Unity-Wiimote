@@ -319,4 +319,10 @@ public class WiimoteDemo : MonoBehaviour {
         public Renderer home;
     }
 
+	void OnApplicationQuit() {
+		if (wiimote != null) {
+			WiimoteManager.Cleanup(wiimote);
+	        wiimote = null;
+		}
+	}
 }
