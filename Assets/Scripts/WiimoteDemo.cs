@@ -12,6 +12,8 @@ public class WiimoteDemo : MonoBehaviour {
     public RectTransform[] ir_bb;
     public RectTransform ir_pointer;
 
+    public AudioClip soundEffect;
+
     private Quaternion initial_rotation;
 
     private Wiimote wiimote;
@@ -176,6 +178,18 @@ public class WiimoteDemo : MonoBehaviour {
             }
             Debug.Log(str.ToString());
         }
+
+        GUILayout.Label("Speaker Data");
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("Init"))
+            wiimote.Speaker.Init();
+        if (GUILayout.Button(wiimote.Speaker.Enabled ? "Disable" : "Enable"))
+            wiimote.Speaker.Enabled = !wiimote.Speaker.Enabled;
+        if (GUILayout.Button(wiimote.Speaker.Muted ? "Unmute" : "Mute"))
+            wiimote.Speaker.Muted = !wiimote.Speaker.Muted;
+        if (GUILayout.Button("Play Sound"))
+            wiimote.Speaker.Play(soundEffect);
+        GUILayout.EndHorizontal();
 
         if (wiimote != null && wiimote.current_ext != ExtensionController.NONE)
         {
