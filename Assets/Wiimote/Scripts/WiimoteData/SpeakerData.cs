@@ -115,10 +115,8 @@ namespace WiimoteApi
             MemoryStream stream = new MemoryStream(buffer);
             byte[] chuck = new byte[21];
             int readBytes = 0;
-            int startTime;
             while ((readBytes = stream.Read(chuck, 1, chuck.Length - 1)) > 0)
             {
-                startTime = System.Environment.TickCount;
                 //length
                 chuck[0] = (byte)(readBytes << 3);
                 //padding
@@ -134,7 +132,7 @@ namespace WiimoteApi
                 {
                     Owner.SendWithType(OutputDataType.SPEAKER_DATA, chuck);
                 }
-                Thread.Sleep(System.Math.Max(1, System.Environment.TickCount - startTime));
+                Thread.Sleep(10);
             }
         }
 
@@ -157,7 +155,7 @@ namespace WiimoteApi
             float[] samples = new float[audioClip.samples];
             audioClip.GetData(samples, 0);
 
-            //read only 1/4 of the data; shittiest downsampling technique from 8000hz to 2000hz
+            //float to byte convertion : 16 to 8 bits
             //just for the sake of testing
             byte[] buffer = new byte[samples.Length];
             for (int i = 0; i < buffer.Length; i++)
