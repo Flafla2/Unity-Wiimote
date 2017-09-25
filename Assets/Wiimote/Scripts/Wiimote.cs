@@ -92,6 +92,9 @@ public class Wiimote
     /// IR data component.
     public IRData        Ir         { get { return _Ir; } }
     private IRData      _Ir;
+    /// Speaker component.
+    public SpeakerData Speaker { get { return _Speaker; } }
+    private SpeakerData _Speaker;
     /// Status info data component.
     public StatusData    Status     { get { return _Status; } }
     private StatusData  _Status;
@@ -148,6 +151,7 @@ public class Wiimote
         _Button = new ButtonData(this);
         _Ir     = new IRData(this);
         _Status = new StatusData(this);
+        _Speaker = new SpeakerData(this);
         _Extension = null;
 
         //RequestIdentifyWiiMotionPlus(); // why not?
