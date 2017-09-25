@@ -60,11 +60,7 @@ namespace WiimoteApi
             {
                 _Enabled = value;
                 byte[] mask = new byte[] { (byte)(_Enabled ? 0x04 : 0x00) };
-                lock (this)
-                {
-                    Owner.SendWithType(OutputDataType.SPEAKER_ENABLE, mask);
-                }
-
+                Owner.SendWithType(OutputDataType.SPEAKER_ENABLE, mask);
             }
         }
 
@@ -79,10 +75,7 @@ namespace WiimoteApi
             {
                 _Muted = value;
                 byte[] mask = new byte[] { (byte)(_Muted ? 0x04 : 0x00) };
-                lock (this)
-                {
-                    Owner.SendWithType(OutputDataType.SPEAKER_MUTE, mask);
-                }
+                Owner.SendWithType(OutputDataType.SPEAKER_MUTE, mask);
             }
         }
 
@@ -128,10 +121,7 @@ namespace WiimoteApi
                     }
                 }
                 //send
-                lock (this)
-                {
-                    Owner.SendWithType(OutputDataType.SPEAKER_DATA, chuck);
-                }
+                Owner.SendWithType(OutputDataType.SPEAKER_DATA, chuck);
                 Thread.Sleep(10);
             }
         }
