@@ -6,5 +6,16 @@
 			"path": "."
 		}
 	],
+	"build_systems":
+	[
+		{
+			"name": "Build HIDAPI",
+			"working_dir": "${project_path}/hidapi-modified/",
+			"shell_cmd": "./bootstrap && ./configure --prefix=${project_path}/build/ && make && make install",
+			"windows": {
+				"path" : "C:\\cygwin64\\bin\\;$path"
+			}
+		}
+	],
 	"solution_file": "./UnityVS.Unity-Wiimote.sln"
 }
