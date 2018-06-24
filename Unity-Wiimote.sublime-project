@@ -13,7 +13,11 @@
 			"working_dir": "${project_path}/hidapi-modified/",
 			"shell_cmd": "./bootstrap && ./configure --prefix=${project_path}/build/ && make && make install",
 			"windows": {
+				// Use cygwin for comilation
 				"path" : "C:\\cygwin64\\bin\\;$path"
+			},
+			"osx": {
+				"shell_cmd": "sh ${project_path}/macos_hidapi_build.sh \"${project_path}\""
 			}
 		}
 	],
