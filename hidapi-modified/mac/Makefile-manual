@@ -13,8 +13,8 @@ CXX=g++
 COBJS=hid.o
 CPPOBJS=../hidtest/hidtest.o
 OBJS=$(COBJS) $(CPPOBJS)
-CFLAGS+=-I../hidapi -Wall -g -c 
-LIBS=-framework IOKit -framework CoreFoundation
+CFLAGS+=-I../hidapi -Wall -ggdb -c 
+LIBS=-framework IOKit -framework CoreFoundation -framework AppKit
 
 
 hidtest: $(OBJS)

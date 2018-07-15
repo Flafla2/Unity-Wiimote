@@ -22,3 +22,9 @@ sysinfo.txt
 
 #UnityVS
 Assets/UnityVS/
+
+# Sublime text workspace
+*.sublime-workspace
+
+# Visual Studio
+.vs/

@@ -434,6 +434,7 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 			struct hid_device_info *tmp;
 			io_object_t iokit_dev;
 			kern_return_t res;
+			uint64_t entry_id;
 			io_string_t path;
 
 			/* VID/PID match. Create the record. */
@@ -454,12 +455,23 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 			cur_dev->next = NULL;
 
 			/* Fill in the path (IOService plane) */
+			// From https://github.com/flirc/hidapi/commit/8d251c3854c3b1877509ab07a623dafc8e803db5
 			iokit_dev = hidapi_IOHIDDeviceGetService(dev);
 			res = IORegistryEntryGetPath(iokit_dev, kIOServicePlane, path);
 			if (res == KERN_SUCCESS)
 				cur_dev->path = strdup(path);
 			else
 				cur_dev->path = strdup("");
+
+			/* Fill in the kernel_entry_id */
+			res = IORegistryEntryGetRegistryEntryID(iokit_dev, &entry_id);
+			if (res == KERN_SUCCESS) {
+				if ((cur_dev->path = calloc(32 + 3 + 1, 1)) != NULL) {
+					sprintf(cur_dev->path, "id:%llu", entry_id);
+				}
+			} else {
+				cur_dev->path = strdup("");
+			}
 
 			/* Serial Number */
 			get_serial_number(dev, buf, BUF_LEN);
@@ -675,36 +687,66 @@ static void *read_thread(void *param)
 
 /* hid_open_path()
  *
- * path must be a valid path to an IOHIDDevice in the IOService plane
+ * path must be a one of the following:
+ * 1. A valid path to an IOHIDDevice in the IOService plane
  * Example: "IOService:/AppleACPIPlatformExpert/PCI0@0/AppleACPIPCI/EHC1@1D,7/AppleUSBEHCI/PLAYSTATION(R)3 Controller@fd120000/IOUSBInterface@0/IOUSBHIDDriver"
+ * 2. An IORegistry entry ID beginning with "id:"
+ * Example: "id:12345"
  */
 hid_device * HID_API_EXPORT hid_open_path(const char *path)
 {
+	printf("Starting hid_open_path...\n");
 	hid_device *dev = NULL;
 	io_registry_entry_t entry = MACH_PORT_NULL;
 
 	dev = new_hid_device();
 
 	/* Set up the HID Manager if it hasn't been done */
-	if (hid_init() < 0)
+	if (hid_init() < 0) {
+		printf("ERROR: hid_init failed in hid_open_path\n");
 		return NULL;
+	}
 
-	/* Get the IORegistry entry for the given path */
-	entry = IORegistryEntryFromPath(kIOMasterPortDefault, path);
-	if (entry == MACH_PORT_NULL) {
-		/* Path wasn't valid (maybe device was removed?) */
+	/* Check if the path represents IORegistry path or an IORegistryEntry ID */
+	// This replaces the use of IORegistryEntryFromPath(...) which is apparently
+	// broken on Sierra...
+	// See https://github.com/flirc/hidapi/commit/8d251c3854c3b1877509ab07a623dafc8e803db5
+	if (strlen(path) > 3) {
+		if (strncmp("id:", path, 3) == 0) {
+			/* Get the IORegistry entry for the given ID */
+			uint64_t entry_id;
+
+			entry_id = strtoull(path+3, NULL, 10);
+
+			entry = IOServiceGetMatchingService(kIOMasterPortDefault, IORegistryEntryIDMatching(entry_id));
+			if (entry == 0) {
+				/* No service found for ID */
+				printf("ERROR: No service found for entry id %llu", entry_id);
+				goto return_error;
+			}
+		} else {
+			/* Get the IORegistry entry for the given path */
+			entry = IORegistryEntryFromPath(kIOMasterPortDefault, path);
+			if (entry == MACH_PORT_NULL) {
+				/* Path wasn't valid (maybe device was removed?) */
+				printf("ERROR: Invalid IORegistry path [ %s ] given", path);
+				goto return_error;
+			}
+		}
+	} else {
 		goto return_error;
 	}
 
 	/* Create an IOHIDDevice for the entry */
 	dev->device_handle = IOHIDDeviceCreate(kCFAllocatorDefault, entry);
 	if (dev->device_handle == NULL) {
+		printf("ERROR: Error creating the HID device.\n");
 		/* Error creating the HID device */
 		goto return_error;
 	}
 
 	/* Open the IOHIDDevice */
-	IOReturn ret = IOHIDDeviceOpen(dev->device_handle, kIOHIDOptionsTypeSeizeDevice);
+	IOReturn ret = IOHIDDeviceOpen(dev->device_handle, kIOHIDOptionsTypeNone);//kIOHIDOptionsTypeSeizeDevice);
 	if (ret == kIOReturnSuccess) {
 		char str[32];
 
@@ -731,13 +773,17 @@ hid_device * HID_API_EXPORT hid_open_path(const char *path)
 		pthread_barrier_wait(&dev->barrier);
 
 		IOObjectRelease(entry);
+
+		printf("...Finished hid_open_path normally\n");
 		return dev;
 	}
 	else {
+		printf("ERROR: Unable to open device (returned %i)\n", ret);
 		goto return_error;
 	}
 
 return_error:
+	fflush(stdout);
 	if (dev->device_handle != NULL)
 		CFRelease(dev->device_handle);
 

@@ -1,6 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
-using System.Collections;
 using System.Text;
 using System;
 using WiimoteApi;
@@ -24,7 +22,24 @@ public class WiimoteDemo : MonoBehaviour {
         initial_rotation = model.rot.localRotation;
     }
 
-	void Update () {
+    private static void OnWiimoteConnect(Wiimote wiimote)
+    {
+        Debug.Log("New Wiimote has connected!  Type: " + wiimote.Type);
+    }
+
+    private void OnEnable()
+    {
+        WiimoteManager.OnWiimoteConnect += OnWiimoteConnect;
+        WiimoteManager.BeginWiimoteScan();
+    }
+
+    private void OnDisable()
+    {
+        WiimoteManager.OnWiimoteConnect -= OnWiimoteConnect;
+        WiimoteManager.EndWiimoteScan();
+    }
+
+    void Update () {
         if (!WiimoteManager.HasWiimote()) { return; }
 
         wiimote = WiimoteManager.Wiimotes[0];
@@ -58,7 +73,7 @@ public class WiimoteDemo : MonoBehaviour {
 
         if (wiimote.current_ext != ExtensionController.MOTIONPLUS)
             model.rot.localRotation = initial_rotation;
-
+        
         if (ir_dots.Length < 4) return;
 
         float[,] ir = wiimote.Ir.GetProbableSensorBarIR();
@@ -66,7 +81,7 @@ public class WiimoteDemo : MonoBehaviour {
         {
             float x = (float)ir[i, 0] / 1023f;
             float y = (float)ir[i, 1] / 767f;
-            if (x == -1 || y == -1) {
+            if (x < 0 || y < 0) {
                 ir_dots[i].anchorMin = new Vector2(0, 0);
                 ir_dots[i].anchorMax = new Vector2(0, 0);
             }
@@ -74,7 +89,7 @@ public class WiimoteDemo : MonoBehaviour {
             ir_dots[i].anchorMin = new Vector2(x, y);
             ir_dots[i].anchorMax = new Vector2(x, y);
 
-            if (ir[i, 2] != -1)
+            if (ir[i, 2] < 0)
             {
                 int index = (int)ir[i,2];
                 float xmin = (float)wiimote.Ir.ir[index,3] / 127f;
@@ -85,6 +100,7 @@ public class WiimoteDemo : MonoBehaviour {
                 ir_bb[i].anchorMax = new Vector2(xmax, ymax);
             }
         }
+
 
         float[] pointer = wiimote.Ir.GetPointingPosition();
         ir_pointer.anchorMin = new Vector2(pointer[0], pointer[1]);
@@ -99,6 +115,14 @@ public class WiimoteDemo : MonoBehaviour {
         GUILayout.Label("Wiimote Found: " + WiimoteManager.HasWiimote());
         if (GUILayout.Button("Find Wiimote"))
             WiimoteManager.FindWiimotes();
+
+        if(WiimoteManager.IsPairingWithWiimotes) {
+            if (GUILayout.Button("Pair with Wiimote"))
+                WiimoteManager.BeginPairingWiimotes();
+        } else {
+            if (GUILayout.Button("Cancel pairing with Wiimote"))
+                WiimoteManager.CancelPairingWiimotes();
+        }
 
         if (GUILayout.Button("Cleanup"))
         {
