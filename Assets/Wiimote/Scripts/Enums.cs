@@ -3,7 +3,7 @@ namespace WiimoteApi {
 /// \sa Wiimote::SendRegisterWriteRequest(RegisterType, int, byte[]), Wiimote::SendRegisterReadRequest(RegisterType, int, int, ReadResponder)
 public enum RegisterType
 {
-    /// The Wii Remote's 16kB generic EEPROM memory module.  This is used to store calubration data
+    /// The Wii Remote's 16kB generic EEPROM memory module.  This is used to store calibration data
     /// as well as Mii block data from the Mii channel.
     EEPROM = 0x00,
     /// The Wii Remote's control registers, used for managing the Wii Remote's peripherals (such as extension
@@ -66,7 +66,7 @@ public enum InputDataType
 /// controllers or accelerometer data).
 ///
 /// For each IR data type you can only use certain InputDataType reports in
-/// order to recieve the data.
+/// order to receive the data.
 public enum IRDataType
 {
     /// \brief 10 bytes of data.  Contains position data for each dot only.
